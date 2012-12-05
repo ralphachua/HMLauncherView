@@ -7,20 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		24DB4A62166F177200BE7935 /* HMLauncherView.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15B014FD8FF2005E1F97 /* HMLauncherView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		83DE15AC14FD8FF2005E1F97 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83DE15AB14FD8FF2005E1F97 /* Foundation.framework */; };
 		83DE15B214FD8FF2005E1F97 /* HMLauncherView.m in Sources */ = {isa = PBXBuildFile; fileRef = 83DE15B114FD8FF2005E1F97 /* HMLauncherView.m */; };
 		83DE15BA14FD8FF3005E1F97 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83DE15B914FD8FF3005E1F97 /* SenTestingKit.framework */; };
 		83DE15BD14FD8FF3005E1F97 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83DE15AB14FD8FF2005E1F97 /* Foundation.framework */; };
 		83DE15C014FD8FF3005E1F97 /* libHMLauncherView.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 83DE15A814FD8FF2005E1F97 /* libHMLauncherView.a */; };
 		83DE15C614FD8FF3005E1F97 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 83DE15C414FD8FF3005E1F97 /* InfoPlist.strings */; };
-		83DE15DD14FD907F005E1F97 /* HMLauncherData.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15D514FD907F005E1F97 /* HMLauncherData.h */; };
+		83DE15DD14FD907F005E1F97 /* HMLauncherData.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15D514FD907F005E1F97 /* HMLauncherData.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		83DE15DE14FD907F005E1F97 /* HMLauncherData.m in Sources */ = {isa = PBXBuildFile; fileRef = 83DE15D614FD907F005E1F97 /* HMLauncherData.m */; };
-		83DE15DF14FD907F005E1F97 /* HMLauncherDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15D714FD907F005E1F97 /* HMLauncherDataSource.h */; };
-		83DE15E014FD907F005E1F97 /* HMLauncherIcon.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15D814FD907F005E1F97 /* HMLauncherIcon.h */; };
+		83DE15DF14FD907F005E1F97 /* HMLauncherDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15D714FD907F005E1F97 /* HMLauncherDataSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		83DE15E014FD907F005E1F97 /* HMLauncherIcon.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15D814FD907F005E1F97 /* HMLauncherIcon.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		83DE15E114FD907F005E1F97 /* HMLauncherIcon.m in Sources */ = {isa = PBXBuildFile; fileRef = 83DE15D914FD907F005E1F97 /* HMLauncherIcon.m */; };
-		83DE15E214FD907F005E1F97 /* HMLauncherItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15DA14FD907F005E1F97 /* HMLauncherItem.h */; };
+		83DE15E214FD907F005E1F97 /* HMLauncherItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15DA14FD907F005E1F97 /* HMLauncherItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		83DE15E314FD907F005E1F97 /* HMLauncherItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 83DE15DB14FD907F005E1F97 /* HMLauncherItem.m */; };
-		83DE15E414FD907F005E1F97 /* HMLauncherViewDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15DC14FD907F005E1F97 /* HMLauncherViewDelegate.h */; };
+		83DE15E414FD907F005E1F97 /* HMLauncherViewDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15DC14FD907F005E1F97 /* HMLauncherViewDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		83DE15EE14FD911F005E1F97 /* HMLauncherDataTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 83DE15E714FD909C005E1F97 /* HMLauncherDataTest.m */; };
 		83DE15F114FD9162005E1F97 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83DE15F014FD9162005E1F97 /* CoreGraphics.framework */; };
 		83DE15F314FD916C005E1F97 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83DE15F214FD916C005E1F97 /* UIKit.framework */; };
@@ -176,6 +177,7 @@
 				83DE15E014FD907F005E1F97 /* HMLauncherIcon.h in Headers */,
 				83DE15E214FD907F005E1F97 /* HMLauncherItem.h in Headers */,
 				83DE15E414FD907F005E1F97 /* HMLauncherViewDelegate.h in Headers */,
+				24DB4A62166F177200BE7935 /* HMLauncherView.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -367,6 +369,7 @@
 				GCC_PREFIX_HEADER = "HMLauncherView/HMLauncherView-Prefix.pch";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "../../Headers/$(PRODUCT_NAME)";
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
@@ -383,6 +386,7 @@
 				GCC_PREFIX_HEADER = "HMLauncherView/HMLauncherView-Prefix.pch";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "../../Headers/$(PRODUCT_NAME)";
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
