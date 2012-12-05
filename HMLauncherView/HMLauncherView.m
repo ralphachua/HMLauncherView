@@ -89,6 +89,13 @@ static const CGFloat kLongPressDuration = 0.3;
 @property (nonatomic, assign) HMLauncherIcon *dragIcon;
 @property (nonatomic, assign) HMLauncherIcon *closingIcon;
 
+/**
+ * This enables a customisation on the pageControl class used.
+ * Could be set on the User-Defined runtime settings with xib 
+ * for ease-of-use.
+ */
+@property (nonatomic, retain) NSString *pageControlClassName;
+
 @end
 
 @implementation HMLauncherView
@@ -102,6 +109,7 @@ static const CGFloat kLongPressDuration = 0.3;
 @synthesize shouldLayoutDragButton;
 @synthesize targetPath;
 @synthesize persistKey;
+@synthesize pageControlClassName = _pageControlClassName;
 
 - (void) reloadData {
     self.dragIcon = nil;
@@ -176,12 +184,11 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 - (void) layoutSubviews {
-    [self.pageControl sizeToFit];
-    CGFloat pageControlHeight = CGRectGetHeight(self.pageControl.bounds);
-    CGFloat pageControlY = CGRectGetHeight(self.bounds) - pageControlHeight;
-    [self.pageControl setFrame:CGRectMake(0, pageControlY, CGRectGetWidth(self.bounds), pageControlHeight)];
+    if (self.pageControlLayoutBlock != NULL) {
+      self.pageControlLayoutBlock(self, self.pageControl);
+    }
+  
     CGRect scrollViewFrame = self.bounds;
-    
     if (!CGRectEqualToRect(scrollViewFrame, self.scrollView.frame)) {
         // see http://openradar.appspot.com/8045239
         self.scrollView.frame = scrollViewFrame;       
@@ -717,7 +724,7 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 - (void)updatePagerWithContentOffset:(CGPoint) contentOffset {
-    NSLog(@"updatePagerWithContentOffset: %@", NSStringFromCGPoint(contentOffset));
+    //NSLog(@"updatePagerWithContentOffset: %@", NSStringFromCGPoint(contentOffset));
     CGFloat pageWidth = self.scrollView.bounds.size.width;
     NSUInteger numberOfPages = [self.dataSource numberOfPagesInLauncherView:self];
     self.pageControl.numberOfPages = numberOfPages;
@@ -760,22 +767,49 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 #pragma mark - lifecycle
+
+- (void)_commonInit {
+    self.scrollView = [[[UIScrollView alloc] initWithFrame:self.bounds] autorelease];
+    [self.scrollView setDelegate:self];
+    [self.scrollView setPagingEnabled:YES];
+    [self.scrollView setShowsHorizontalScrollIndicator:NO];
+    [self.scrollView setShowsVerticalScrollIndicator:NO];
+    [self addSubview:self.scrollView];
+  
+    Class pageControlClass = [UIPageControl class];
+    if (self.pageControlClassName != nil) {
+      pageControlClass = NSClassFromString(self.pageControlClassName);
+      NSAssert((pageControlClass != nil), @"Page control class name is provided by the class is not found.");
+    }
+  
+    self.pageControl = [[[pageControlClass alloc]
+                         initWithFrame:CGRectMake(0, 10, 10, 10)] autorelease];
+    NSAssert(([self.pageControl isKindOfClass:[UIPageControl class]]), @"pageControl should have a type of UIPageControl or its inherittance.\nInstead it is: %@", [self.pageControl class]);
+  
+    [self.pageControl setHidesForSinglePage:YES];
+    [self addSubview:self.pageControl];
+  
+    // The default pageControlLayoutBlock when layoutSubview gets called.
+    if ([self pageControlLayoutBlock] == NULL)
+    {
+      self.pageControlLayoutBlock = ^(HMLauncherView *launcherView, UIPageControl *pageControl) {
+        [self.pageControl sizeToFit];
+        CGFloat pageControlHeight = CGRectGetHeight(self.pageControl.bounds);
+        CGFloat pageControlY = CGRectGetHeight(self.bounds) - pageControlHeight;
+        [self.pageControl setFrame:CGRectMake(0, pageControlY, CGRectGetWidth(self.bounds), pageControlHeight)];
+      };
+    }
+}
+
+- (void)awakeFromNib {
+    [super awakeFromNib];
+    [self _commonInit];
+}
+
 - (id)initWithFrame:(CGRect) frame {
     if (self = [super initWithFrame:frame]) {
         [self setAutoresizingMask:UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth];
-        self.scrollView = [[[UIScrollView alloc] initWithFrame:self.bounds] autorelease];
-        [self.scrollView setDelegate:self];
-        [self.scrollView setPagingEnabled:YES];
-        [self.scrollView setShowsHorizontalScrollIndicator:NO]; 
-        [self.scrollView setShowsVerticalScrollIndicator:NO];
-        [self addSubview:self.scrollView];
-        
-        self.pageControl = [[[UIPageControl alloc] initWithFrame:
-                             CGRectMake(0, 10, 10, 10)
-                             ] autorelease];
-        [self.pageControl setHidesForSinglePage:YES];
-        [self addSubview:self.pageControl];
-
+        [self _commonInit];
     }
     return self;
 }

@@ -18,6 +18,8 @@
 #import "HMLauncherDataSource.h"
 #import "HMLauncherViewDelegate.h"
 
+typedef void(^HMLauncherViewPageControlLayoutBlock)(HMLauncherView *, UIPageControl *);
+
 @interface HMLauncherView : UIView <UIScrollViewDelegate, UIAlertViewDelegate>
 
 - (void) reloadData;
@@ -39,5 +41,11 @@
 @property (nonatomic, assign) NSObject<HMLauncherDataSource> *dataSource;
 @property (nonatomic, assign) NSObject<HMLauncherViewDelegate> *delegate;
 @property (nonatomic, retain) NSString *persistKey;
+
+/**
+ * Gives the freedom to have a custom block for layout/positioning
+ * the page control.
+ */
+@property (nonatomic, copy) HMLauncherViewPageControlLayoutBlock pageControlLayoutBlock;
 
 @end
