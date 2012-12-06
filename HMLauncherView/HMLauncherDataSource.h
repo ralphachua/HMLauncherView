@@ -18,6 +18,16 @@
 #import "HMLauncherIcon.h"
 
 @protocol HMLauncherDataSource <NSObject>
+@optional
+/**
+ * Ability to supply an optional view as a background for a certain page.
+ */
+- (UIView *)launcherView:(HMLauncherView *)launcherView backgroundForPage:(NSUInteger)page;
+
+/**
+ * Returns whether the scrollView in launcherView should bounce.
+ */
+- (BOOL)launcherViewShouldBounce:(HMLauncherView *)launcherView;
 
 @required
 

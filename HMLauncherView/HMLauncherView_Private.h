@@ -59,6 +59,21 @@
 - (void) updateDeleteButtons;
 - (UIView*) keyView;
 
+/**
+ * Update the tapGestureRecogniser in each icon to enable/disable depending
+ * on the current mode.
+ */
+- (void) updateTapGestureRecogniserIfNecessary;
+
+/**
+ * Enable/Disable every tapGestureRecogniser in a specified icon.
+ *
+ * @discussion  We should only have 1 tap recogniser on each icon, if we have more
+ *              most likely that is an addition to the `default` one, for now
+ *              we print the warning on the console.
+ */
+- (void) tapGestureRecogniserFor:(HMLauncherIcon *)icon enabled:(BOOL)enabled;
+
 @property (nonatomic, retain) UIScrollView *scrollView;
 @property (nonatomic, retain) UIPageControl *pageControl;
 @property (nonatomic, assign) NSTimer *scrollTimer;
