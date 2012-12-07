@@ -46,7 +46,11 @@ static const CGFloat kLongPressDuration = 0.3;
 @synthesize shouldLayoutDragButton;
 @synthesize targetPath;
 @synthesize persistKey;
+
 @synthesize pageControlClassName = _pageControlClassName;
+
+// Related to backgroundViews
+@synthesize backgroundViews, cachedBackgroundViews;
 
 - (void) reloadData {
     self.dragIcon = nil;
@@ -829,6 +833,9 @@ static const CGFloat kLongPressDuration = 0.3;
     [self.scrollView setShowsVerticalScrollIndicator:NO];
     [self addSubview:self.scrollView];
   
+    self.backgroundViews = [[[NSMutableDictionary alloc] init] autorelease];
+    self.cachedBackgroundViews = [[[NSMutableSet alloc] init] autorelease];
+  
     self.shouldReceiveTapWhileEditing = YES;
   
     Class pageControlClass = [UIPageControl class];
@@ -876,6 +883,12 @@ static const CGFloat kLongPressDuration = 0.3;
     [targetPath release], targetPath = nil;    
     [scrollView release], scrollView = nil;
     [pageControl release], pageControl = nil;
+  
+    [_pageControlClassName release], _pageControlClassName = nil;
+    
+    [backgroundViews release], backgroundViews = nil;
+    [cachedBackgroundViews release], cachedBackgroundViews = nil;
+  
     [super dealloc];
 }
 
