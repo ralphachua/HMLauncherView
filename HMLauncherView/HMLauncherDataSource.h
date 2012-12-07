@@ -81,7 +81,7 @@
 
 
 // Removes all pages which does not contain any icon.
-- (void) removeEmptyPages:(HMLauncherView*) launcherView;
+- (NSIndexSet *) removeEmptyPages:(HMLauncherView*) launcherView;
 
 
 @end
