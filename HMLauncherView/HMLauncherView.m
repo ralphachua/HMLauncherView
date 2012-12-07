@@ -15,6 +15,7 @@
 
 #import "HMLauncherView.h"
 #import "HMLauncherItem.h"
+#import "HMLauncherView_Private.h"
 
 static const CGFloat kShakeRadians = 3.0f;
 static const NSTimeInterval kShakeTime = 0.15;
@@ -33,64 +34,6 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 @end
 
-@interface HMLauncherView() {
-    BOOL editing;
-}
-- (void) enumeratePagesUsingBlock:(void (^) (NSUInteger page)) block;
-- (void) enumerateIconsOfPage:(NSUInteger) page 
-                   usingBlock:(void (^) (HMLauncherIcon* icon, NSUInteger idx)) block;
-
-
-- (CGFloat) calculateIconSpacer:(NSUInteger) numberOfColumns buttonSize:(CGSize) buttonSize;
-- (NSInteger) calculateSpringOffset:(HMLauncherIcon*) icon;
-- (void) executeScroll:(NSTimer*) timer;
-
-- (void) didLongPressIcon:(UILongPressGestureRecognizer*) sender withEvent:(UIEvent*) event;
-- (void) didTapIcon:(UITapGestureRecognizer*) sender;
-- (void) longPressBegan:(HMLauncherIcon*) icon;
-- (void) longPressMoved:(HMLauncherIcon*) icon 
-                toPoint:(CGPoint) newPosition;
-- (void) longPressEnded:(HMLauncherIcon*) icon;
-- (void)    performMove:(HMLauncherIcon *)icon
-                toPoint:(CGPoint)newCenter
-           launcherView:(HMLauncherView *)launcherView;
-- (void) removeAllGestureRecognizers:(HMLauncherIcon*) icon;
-- (UILongPressGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon 
-     addLongPressGestureRecognizerWithDuration:(CGFloat) duration 
-                requireGestureRecognizerToFail:(UIGestureRecognizer*) recognizerToFail;
-- (UITapGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon
- addTapRecognizerWithNumberOfTapsRequred:(NSUInteger) tapsRequired;
-
-- (NSIndexPath*) iconIndexForPoint:(CGPoint) center;
-- (NSUInteger) pageIndexForPoint:(CGPoint) center;
-
-- (void) makeIconDraggable:(HMLauncherIcon*) icon;
-- (void) makeIconNonDraggable:(HMLauncherIcon*) icon
-           sourceLauncherView:(HMLauncherView*) sourceLauncherView
-           targetLauncherView:(HMLauncherView*) targetLauncherView
-                   completion:(void (^) (void)) block;
-
-- (void) startShaking;
-- (void) stopShaking;
-
-- (void) checkIfScrollingIsNeeded:(HMLauncherIcon*) launcherIcon;
-- (void) startScrollTimerWithOffset:(NSInteger) offset;
-- (void) stopScrollTimer;
-- (void) executeScroll:(NSTimer *)timer;
-
-- (void) updatePagerWithContentOffset:(CGPoint) contentOffset;
-- (void) updateScrollViewContentSize;
-- (void) updateDeleteButtons;
-- (UIView*) keyView;
-
-@property (nonatomic, retain) UIScrollView *scrollView;
-@property (nonatomic, retain) UIPageControl *pageControl;
-@property (nonatomic, assign) NSTimer *scrollTimer;
-@property (nonatomic, assign) HMLauncherIcon *dragIcon;
-@property (nonatomic, assign) HMLauncherIcon *closingIcon;
-
-@end
-
 @implementation HMLauncherView
 @synthesize dataSource;
 @synthesize delegate;
@@ -99,9 +42,11 @@ static const CGFloat kLongPressDuration = 0.3;
 @synthesize scrollTimer;
 @synthesize dragIcon;
 @synthesize closingIcon;
+@synthesize shouldReceiveTapWhileEditing;
 @synthesize shouldLayoutDragButton;
 @synthesize targetPath;
 @synthesize persistKey;
+@synthesize pageControlClassName = _pageControlClassName;
 
 - (void) reloadData {
     self.dragIcon = nil;
@@ -114,9 +59,27 @@ static const CGFloat kLongPressDuration = 0.3;
         UIView *subview = obj;
         [subview removeFromSuperview];
     }];
-    
+  
+    //  Set whether the scrollView should bounce.
+    if ([self.dataSource respondsToSelector:@selector(launcherViewShouldBounce:)]) {
+      self.scrollView.bounces = [self.dataSource launcherViewShouldBounce:self];
+    }
+  
     // Add all buttons to ScrollView
+    CGRect bounds = self.scrollView.bounds;
     [self enumeratePagesUsingBlock:^(NSUInteger page) {
+      
+        if ([self.dataSource respondsToSelector:@selector(launcherView:backgroundForPage:)]) {
+          //Add the backgroundView if the dataSource prefers it.
+          UIView *view = [self.dataSource launcherView:self backgroundForPage:page];
+          CGRect frame = view.frame;
+          frame.origin.x = frame.origin.x + CGRectGetWidth(bounds)*page;
+          view.frame = frame;
+          
+          // Add it to the scrollView.
+          [self.scrollView addSubview:view];
+        }
+      
         [self enumerateIconsOfPage:page usingBlock:^(HMLauncherIcon *icon, NSUInteger idx) {
             [self removeAllGestureRecognizers:icon];
             [self addIcon:icon];
@@ -129,12 +92,12 @@ static const CGFloat kLongPressDuration = 0.3;
     NSAssert([self.dataSource launcherView:self contains:icon] == YES, @"Model is inconsistent with view");
     
     UITapGestureRecognizer *tapGestureRecognizer = nil;
-    if (icon.canBeTapped) {
+    if (self.editing == NO && icon.canBeTapped) {
         tapGestureRecognizer = [self launcherIcon:icon addTapRecognizerWithNumberOfTapsRequred:1];
     } 
-    if (icon.canBeDragged) {
+    if (self.editing == NO && icon.canBeDragged) {
         [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:kLongPressDuration requireGestureRecognizerToFail:tapGestureRecognizer];
-    }   
+    }
     [self.scrollView addSubview:icon];
 }
 
@@ -160,7 +123,7 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 - (UIView *) keyView {
-	UIWindow *w = [[UIApplication sharedApplication] keyWindow];
+	UIWindow *w = [self window];
 	if (w.subviews.count > 0) {
 		return [w.subviews lastObject];
 	} else {
@@ -176,18 +139,20 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 - (void) layoutSubviews {
-    [self.pageControl sizeToFit];
-    CGFloat pageControlHeight = CGRectGetHeight(self.pageControl.bounds);
-    CGFloat pageControlY = CGRectGetHeight(self.bounds) - pageControlHeight;
-    [self.pageControl setFrame:CGRectMake(0, pageControlY, CGRectGetWidth(self.bounds), pageControlHeight)];
+    if (self.pageControlLayoutBlock != NULL) {
+      self.pageControlLayoutBlock(self, self.pageControl);
+    }
+  
     CGRect scrollViewFrame = self.bounds;
-    
     if (!CGRectEqualToRect(scrollViewFrame, self.scrollView.frame)) {
         // see http://openradar.appspot.com/8045239
         self.scrollView.frame = scrollViewFrame;       
     }
     [self updateScrollViewContentSize];
-    [self layoutIcons];
+  
+    if (self.editing == NO) {
+      [self layoutIcons];
+    }
 }
 
 - (void) layoutIconsAnimated {
@@ -288,8 +253,9 @@ static const CGFloat kLongPressDuration = 0.3;
                                                                                             action:@selector(didLongPressIcon:withEvent:)];
     [longPress setMinimumPressDuration:duration];
     if (recognizerToFail != nil) {
-        [longPress requireGestureRecognizerToFail:recognizerToFail];
+        [recognizerToFail requireGestureRecognizerToFail:longPress];
     }
+  
     [icon addGestureRecognizer:longPress];
     return [longPress autorelease];
 }
@@ -329,7 +295,7 @@ static const CGFloat kLongPressDuration = 0.3;
     if ([self.scrollView isDragging]) {
         return;
     }
-    HMLauncherIcon *icon = (HMLauncherIcon*) sender.view;   
+    HMLauncherIcon *icon = (HMLauncherIcon*) sender.view;
     if (sender.state == UIGestureRecognizerStateBegan) {
         [self longPressBegan:icon];
     } else if (sender.state == UIGestureRecognizerStateChanged) {
@@ -454,8 +420,10 @@ static const CGFloat kLongPressDuration = 0.3;
 - (void) startEditing {
     if (editing == NO) {
         editing = YES;
+      
         [self.dataSource removeEmptyPages:self];
         [self.dataSource addPageToLauncherView:self];
+        [self updateTapGestureRecogniserIfNecessary];
         [self updateDeleteButtons];
         [self updateScrollViewContentSize];        
         [self updatePagerWithContentOffset:self.scrollView.contentOffset];
@@ -471,6 +439,7 @@ static const CGFloat kLongPressDuration = 0.3;
         [self stopShaking];
         [self updateDeleteButtons];
         [self.dataSource removeEmptyPages:self];
+        [self updateTapGestureRecogniserIfNecessary];
         [self updateScrollViewContentSize];    
         [self updatePagerWithContentOffset:self.scrollView.contentOffset];
         [self setTargetPath:nil];
@@ -481,6 +450,40 @@ static const CGFloat kLongPressDuration = 0.3;
     }
     
 }
+
+- (void) updateTapGestureRecogniserIfNecessary {
+  BOOL shouldBeEnabled = YES;
+  if (self.editing && self.shouldReceiveTapWhileEditing)
+  {
+    shouldBeEnabled = NO;
+  }
+  
+  [self enumeratePagesUsingBlock:^(NSUInteger page) {
+    [self enumerateIconsOfPage:page usingBlock:^(HMLauncherIcon *icon, NSUInteger idx) {
+      [self tapGestureRecogniserFor:icon enabled:shouldBeEnabled];
+    }];
+  }];
+}
+
+- (void) tapGestureRecogniserFor:(HMLauncherIcon *)icon enabled:(BOOL)enabled {
+  // Get all of the tapGestureRecognisers in the list of recognisers.
+  NSIndexSet *tapGestureRecognisers = [icon.gestureRecognizers indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+    return ([obj isKindOfClass:[UITapGestureRecognizer class]]);
+  }];
+  
+  if (tapGestureRecognisers.count > 1)
+  {
+    // We have more than 1 tapGestureRecogniser, print out the warning why is this happening?
+    NSLog(@"[Warning]Found %@ in icon: %@", tapGestureRecognisers, icon);
+  }
+  
+  // Turn it to enable/disable depending on the parameter supplied.
+  [tapGestureRecognisers enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+    UITapGestureRecognizer *gestureRecogniser = icon.gestureRecognizers[idx];
+    gestureRecogniser.enabled = enabled;
+  }];
+}
+
 
 - (void) checkIfScrollingIsNeeded:(HMLauncherIcon*) launcherIcon {
     NSInteger springOffset = [self calculateSpringOffset:launcherIcon];
@@ -683,6 +686,8 @@ static const CGFloat kLongPressDuration = 0.3;
                           delay:0 
                         options:UIViewAnimationOptionAutoreverse | UIViewAnimationOptionRepeat | UIViewAnimationOptionAllowUserInteraction
                      animations:^{
+                       
+                       
                          [self enumeratePagesUsingBlock:^(NSUInteger page) {
                              [self enumerateIconsOfPage:page usingBlock:^(HMLauncherIcon *icon, NSUInteger idx) {
                                  if (icon != self.dragIcon && icon != self.closingIcon) {
@@ -717,7 +722,7 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 - (void)updatePagerWithContentOffset:(CGPoint) contentOffset {
-    NSLog(@"updatePagerWithContentOffset: %@", NSStringFromCGPoint(contentOffset));
+    //NSLog(@"updatePagerWithContentOffset: %@", NSStringFromCGPoint(contentOffset));
     CGFloat pageWidth = self.scrollView.bounds.size.width;
     NSUInteger numberOfPages = [self.dataSource numberOfPagesInLauncherView:self];
     self.pageControl.numberOfPages = numberOfPages;
@@ -760,22 +765,51 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 #pragma mark - lifecycle
+
+- (void)_commonInit {
+    self.scrollView = [[[UIScrollView alloc] initWithFrame:self.bounds] autorelease];
+    [self.scrollView setDelegate:self];
+    [self.scrollView setPagingEnabled:YES];
+    [self.scrollView setShowsHorizontalScrollIndicator:NO];
+    [self.scrollView setShowsVerticalScrollIndicator:NO];
+    [self addSubview:self.scrollView];
+  
+    self.shouldReceiveTapWhileEditing = YES;
+  
+    Class pageControlClass = [UIPageControl class];
+    if (self.pageControlClassName != nil) {
+      pageControlClass = NSClassFromString(self.pageControlClassName);
+      NSAssert((pageControlClass != nil), @"Page control class name is provided by the class is not found.");
+    }
+  
+    self.pageControl = [[[pageControlClass alloc]
+                         initWithFrame:CGRectMake(0, 10, 10, 10)] autorelease];
+    NSAssert(([self.pageControl isKindOfClass:[UIPageControl class]]), @"pageControl should have a type of UIPageControl or its inherittance.\nInstead it is: %@", [self.pageControl class]);
+  
+    [self.pageControl setHidesForSinglePage:YES];
+    [self addSubview:self.pageControl];
+  
+    // The default pageControlLayoutBlock when layoutSubview gets called.
+    if ([self pageControlLayoutBlock] == NULL)
+    {
+      self.pageControlLayoutBlock = ^(HMLauncherView *launcherView, UIPageControl *pageControl) {
+        [self.pageControl sizeToFit];
+        CGFloat pageControlHeight = CGRectGetHeight(self.pageControl.bounds);
+        CGFloat pageControlY = CGRectGetHeight(self.bounds) - pageControlHeight;
+        [self.pageControl setFrame:CGRectMake(0, pageControlY, CGRectGetWidth(self.bounds), pageControlHeight)];
+      };
+    }
+}
+
+- (void)awakeFromNib {
+    [super awakeFromNib];
+    [self _commonInit];
+}
+
 - (id)initWithFrame:(CGRect) frame {
     if (self = [super initWithFrame:frame]) {
         [self setAutoresizingMask:UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth];
-        self.scrollView = [[[UIScrollView alloc] initWithFrame:self.bounds] autorelease];
-        [self.scrollView setDelegate:self];
-        [self.scrollView setPagingEnabled:YES];
-        [self.scrollView setShowsHorizontalScrollIndicator:NO]; 
-        [self.scrollView setShowsVerticalScrollIndicator:NO];
-        [self addSubview:self.scrollView];
-        
-        self.pageControl = [[[UIPageControl alloc] initWithFrame:
-                             CGRectMake(0, 10, 10, 10)
-                             ] autorelease];
-        [self.pageControl setHidesForSinglePage:YES];
-        [self addSubview:self.pageControl];
-
+        [self _commonInit];
     }
     return self;
 }

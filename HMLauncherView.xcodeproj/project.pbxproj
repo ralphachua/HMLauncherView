@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		24DB4A62166F177200BE7935 /* HMLauncherView.h in Headers */ = {isa = PBXBuildFile; fileRef = 83DE15B014FD8FF2005E1F97 /* HMLauncherView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		24DB4A8E167040EF00BE7935 /* HMLauncherView_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 24DB4A8C1670408200BE7935 /* HMLauncherView_Private.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		83DE15AC14FD8FF2005E1F97 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83DE15AB14FD8FF2005E1F97 /* Foundation.framework */; };
 		83DE15B214FD8FF2005E1F97 /* HMLauncherView.m in Sources */ = {isa = PBXBuildFile; fileRef = 83DE15B114FD8FF2005E1F97 /* HMLauncherView.m */; };
 		83DE15BA14FD8FF3005E1F97 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83DE15B914FD8FF3005E1F97 /* SenTestingKit.framework */; };
@@ -40,6 +41,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		24DB4A8C1670408200BE7935 /* HMLauncherView_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HMLauncherView_Private.h; sourceTree = "<group>"; };
 		83DE15A814FD8FF2005E1F97 /* libHMLauncherView.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libHMLauncherView.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		83DE15AB14FD8FF2005E1F97 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		83DE15AF14FD8FF2005E1F97 /* HMLauncherView-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "HMLauncherView-Prefix.pch"; sourceTree = "<group>"; };
@@ -132,6 +134,7 @@
 				83DE15DC14FD907F005E1F97 /* HMLauncherViewDelegate.h */,
 				83DE15B014FD8FF2005E1F97 /* HMLauncherView.h */,
 				83DE15B114FD8FF2005E1F97 /* HMLauncherView.m */,
+				24DB4A8C1670408200BE7935 /* HMLauncherView_Private.h */,
 				83DE15AE14FD8FF2005E1F97 /* Supporting Files */,
 			);
 			path = HMLauncherView;
@@ -178,6 +181,7 @@
 				83DE15E214FD907F005E1F97 /* HMLauncherItem.h in Headers */,
 				83DE15E414FD907F005E1F97 /* HMLauncherViewDelegate.h in Headers */,
 				24DB4A62166F177200BE7935 /* HMLauncherView.h in Headers */,
+				24DB4A8E167040EF00BE7935 /* HMLauncherView_Private.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
