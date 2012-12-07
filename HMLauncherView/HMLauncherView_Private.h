@@ -81,6 +81,17 @@
 @property (nonatomic, assign) HMLauncherIcon *closingIcon;
 
 /**
+ * Unused backgroundViews at the moment. Might be used by the dataSource
+ * to get a reusable backgroundView.
+ */
+@property (nonatomic, retain) NSMutableSet *cachedBackgroundViews;
+
+/**
+ * Holds the reference to all backgroundViews used by the LauncherView.
+ */
+@property (nonatomic, retain) NSMutableDictionary *backgroundViews;
+
+/**
  * This enables a customisation on the pageControl class used.
  * Could be set on the User-Defined runtime settings with xib
  * for ease-of-use.

@@ -35,6 +35,9 @@ typedef void(^HMLauncherViewPageControlLayoutBlock)(HMLauncherView *, UIPageCont
 - (void) layoutIconsAnimated;
 - (void) layoutIcons;
 
+// Get the reusable background view from the Launcher View
+- (UIView *)reusableBackgroundView;
+
 @property (nonatomic, assign) BOOL shouldReceiveTapWhileEditing;
 @property (nonatomic, assign) BOOL shouldLayoutDragButton;
 @property (nonatomic, readonly) BOOL editing;

@@ -54,11 +54,17 @@ static const CGFloat kLongPressDuration = 0.3;
     NSUInteger numberOfPages = [self.dataSource numberOfPagesInLauncherView:self];
     [self.pageControl setNumberOfPages:numberOfPages];
     
-    // Remove all previous stuff from ScrollView;
+    // Remove all previous stuff from ScrollView (this includes any background view if there is one)
     [[scrollView subviews] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         UIView *subview = obj;
         [subview removeFromSuperview];
     }];
+  
+    // Toss away the background view that is currently being hold
+    for (UIView *view in self.backgroundViews.allValues) {
+        [self.cachedBackgroundViews addObject:view];
+    }
+    [self.backgroundViews removeAllObjects];
   
     //  Set whether the scrollView should bounce.
     if ([self.dataSource respondsToSelector:@selector(launcherViewShouldBounce:)]) {
@@ -66,20 +72,9 @@ static const CGFloat kLongPressDuration = 0.3;
     }
   
     // Add all buttons to ScrollView
-    CGRect bounds = self.scrollView.bounds;
     [self enumeratePagesUsingBlock:^(NSUInteger page) {
-      
-        if ([self.dataSource respondsToSelector:@selector(launcherView:backgroundForPage:)]) {
-          //Add the backgroundView if the dataSource prefers it.
-          UIView *view = [self.dataSource launcherView:self backgroundForPage:page];
-          CGRect frame = view.frame;
-          frame.origin.x = frame.origin.x + CGRectGetWidth(bounds)*page;
-          view.frame = frame;
-          
-          // Add it to the scrollView.
-          [self.scrollView addSubview:view];
-        }
-      
+        // When we are reloading the page, try to add background view if needed.
+        [self addBackgroundViewIfNescessaryToPage:page];
         [self enumerateIconsOfPage:page usingBlock:^(HMLauncherIcon *icon, NSUInteger idx) {
             [self removeAllGestureRecognizers:icon];
             [self addIcon:icon];
@@ -268,6 +263,33 @@ static const CGFloat kLongPressDuration = 0.3;
     return [tap autorelease];
 }
 
+# pragma mark - Background View related
+- (UIView *)reusableBackgroundView {
+  // Get one of the reusable background view from our cache and make sure to
+  // remove it from the cache.
+  UIView *reusableBGView = [[self cachedBackgroundViews] anyObject];
+  [[self cachedBackgroundViews] removeObject:reusableBGView];
+  return reusableBGView;
+}
+
+- (void)addBackgroundViewIfNescessaryToPage:(NSUInteger)page {
+  // Only do this if the dataSource is implementing it.
+  if ([self.dataSource respondsToSelector:@selector(launcherView:backgroundForPage:)]) {
+    // Grab the backgroundView from the datasource.
+    UIView *view = [self.dataSource launcherView:self backgroundForPage:page];
+    CGRect frame = view.frame;
+    frame.origin.x = frame.origin.x + CGRectGetWidth(self.scrollView.bounds)*page;
+    view.frame = frame;
+    
+    // Add the background to the subview.
+    [self.scrollView addSubview:view];
+    
+    // Record that the backgroundView is currently used.
+    NSNumber *pageIndexKey = @(page);
+    self.backgroundViews[pageIndexKey] = view;
+  }
+}
+
 # pragma mark - Gesture Actions
 - (void) didTapIcon:(UITapGestureRecognizer*) sender {
     HMLauncherIcon *launcherIcon = (HMLauncherIcon*) sender.view;
@@ -417,12 +439,45 @@ static const CGFloat kLongPressDuration = 0.3;
     }
 }
 
+- (NSMutableArray *) addPage {
+  // Get the newPage added to the dataSource.
+  NSMutableArray *newPage = [self.dataSource addPageToLauncherView:self];
+  
+  // Also, try to add the backgroundView if nescessary to that added page.
+  NSUInteger lastPage = [self.dataSource numberOfPagesInLauncherView:self]-1;
+  [self addBackgroundViewIfNescessaryToPage:lastPage];
+  
+  return newPage;
+}
+
+- (void) removeEmptyPages
+{
+  NSIndexSet *indexSet = [self.dataSource removeEmptyPages:self];
+  
+  // Go through the removed pages and remove its backgroundView if needed
+  [indexSet enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+    NSNumber *removedPage = @(idx);
+    UIView *bgViewIfAvailable = self.backgroundViews[removedPage];
+    
+    if (bgViewIfAvailable != nil)
+    {
+      // If there is a backgroundView on that particular page,
+      // put it into the cache ivar after removing it from superview.
+      [self.cachedBackgroundViews addObject:bgViewIfAvailable];
+      [bgViewIfAvailable removeFromSuperview];
+      [self.backgroundViews removeObjectForKey:removedPage];
+    }
+    
+  }];
+  
+}
+
 - (void) startEditing {
     if (editing == NO) {
         editing = YES;
       
-        [self.dataSource removeEmptyPages:self];
-        [self.dataSource addPageToLauncherView:self];
+        [self removeEmptyPages];
+        [self addPage];
         [self updateTapGestureRecogniserIfNecessary];
         [self updateDeleteButtons];
         [self updateScrollViewContentSize];        
@@ -438,7 +493,7 @@ static const CGFloat kLongPressDuration = 0.3;
         editing = NO;
         [self stopShaking];
         [self updateDeleteButtons];
-        [self.dataSource removeEmptyPages:self];
+        [self removeEmptyPages];
         [self updateTapGestureRecogniserIfNecessary];
         [self updateScrollViewContentSize];    
         [self updatePagerWithContentOffset:self.scrollView.contentOffset];
