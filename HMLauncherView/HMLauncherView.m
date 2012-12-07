@@ -42,6 +42,7 @@ static const CGFloat kLongPressDuration = 0.3;
 @synthesize scrollTimer;
 @synthesize dragIcon;
 @synthesize closingIcon;
+@synthesize shouldRemoveWhenDraggedOutside;
 @synthesize shouldReceiveTapWhileEditing;
 @synthesize shouldLayoutDragButton;
 @synthesize targetPath;
@@ -65,7 +66,7 @@ static const CGFloat kLongPressDuration = 0.3;
     }];
   
     // Toss away the background view that is currently being hold
-    for (UIView *view in self.backgroundViews.allValues) {
+    for (UIView *view in self.backgroundViews) {
         [self.cachedBackgroundViews addObject:view];
     }
     [self.backgroundViews removeAllObjects];
@@ -294,8 +295,7 @@ static const CGFloat kLongPressDuration = 0.3;
     [self.scrollView addSubview:view];
     
     // Record that the backgroundView is currently used.
-    NSNumber *pageIndexKey = @(page);
-    self.backgroundViews[pageIndexKey] = view;
+    self.backgroundViews[self.backgroundViews.count] = view;
   }
 }
 
@@ -387,38 +387,41 @@ static const CGFloat kLongPressDuration = 0.3;
 - (void) longPressEnded:(HMLauncherIcon*) icon {
     HMLauncherView *targetLauncherView = [self.delegate targetLauncherViewForIcon:icon];
     NSLog(@"launcherView responsible: %@", targetLauncherView);
-    if (targetLauncherView == nil) {
+    if (targetLauncherView == nil && self.shouldRemoveWhenDraggedOutside == NO) {
         targetLauncherView = self;
         self.targetPath = nil;
     }
 
-    if (targetLauncherView != nil) {
-        NSAssert(targetLauncherView.dragIcon == self.dragIcon, @"launcherView.dragIcon != self.dragIcon");
-        
+    if (targetLauncherView != nil || self.shouldRemoveWhenDraggedOutside) {
+        NSAssert((self.shouldRemoveWhenDraggedOutside || targetLauncherView.dragIcon == self.dragIcon), @"launcherView.dragIcon != self.dragIcon");
         [targetLauncherView stopScrollTimer];
-        if (targetLauncherView.targetPath != nil) {
-            NSInteger pageIndex = [targetLauncherView.targetPath pageIndex];
-            NSInteger iconIndex = [targetLauncherView.targetPath iconIndex];
-            targetLauncherView.targetPath = nil;
-            if (targetLauncherView == self) {
-                [self.dataSource launcherView:self moveIcon:self.dragIcon
-                                       toPage:pageIndex
-                                      toIndex:iconIndex];
-                
-            } else {
-                NSLog(@"removing icon: %@ from launcherView: %@", self.dragIcon, self);
-                [self.dataSource launcherView:self removeIcon:self.dragIcon];
-                if ([self.delegate respondsToSelector:@selector(launcherView:didDeleteIcon:)]) {
-                    [self.delegate launcherView:self didDeleteIcon:self.dragIcon];                    
-                }
-
-                NSLog(@"adding icon: %@ to launcherView: %@", self.dragIcon, targetLauncherView);
-                if ([self.delegate respondsToSelector:@selector(launcherView:willAddIcon:)]) {
-                    [targetLauncherView.delegate launcherView:targetLauncherView willAddIcon:self.dragIcon];                                
-                }
-                [targetLauncherView.dataSource launcherView:targetLauncherView addIcon:self.dragIcon
-                                            pageIndex:pageIndex
-                                            iconIndex:iconIndex];                
+      
+        NSInteger pageIndex = [targetLauncherView.targetPath pageIndex];
+        NSInteger iconIndex = [targetLauncherView.targetPath iconIndex];
+        targetLauncherView.targetPath = nil;
+      
+        if (targetLauncherView == self) {
+            [self.dataSource launcherView:self moveIcon:self.dragIcon
+                                   toPage:pageIndex
+                                  toIndex:iconIndex];
+        } else {
+            NSLog(@"removing icon: %@ from launcherView: %@", self.dragIcon, self);
+            [self.dataSource launcherView:self removeIcon:self.dragIcon];
+            if ([self.delegate respondsToSelector:@selector(launcherView:didDeleteIcon:)]) {
+              [self.delegate launcherView:self didDeleteIcon:self.dragIcon];
+            }
+          
+            // the icon is dragged outside, if `shouldRemoveWhenDraggedOutside` is set to NO
+            // should add it to the targetLauncherView and it should not be nil.
+            if (self.shouldRemoveWhenDraggedOutside == NO) {
+              NSAssert((targetLauncherView), @"We dont have another launcherView to move the icon into.\nDrag Icon: %@", self.dragIcon);
+              NSLog(@"adding icon: %@ to launcherView: %@", self.dragIcon, targetLauncherView);
+              if ([self.delegate respondsToSelector:@selector(launcherView:willAddIcon:)]) {
+                [targetLauncherView.delegate launcherView:targetLauncherView willAddIcon:self.dragIcon];
+              }
+              [targetLauncherView.dataSource launcherView:targetLauncherView addIcon:self.dragIcon
+                                                pageIndex:pageIndex
+                                                iconIndex:iconIndex];
             }
         }
     }
@@ -462,23 +465,24 @@ static const CGFloat kLongPressDuration = 0.3;
 - (void) removeEmptyPages
 {
   NSIndexSet *indexSet = [self.dataSource removeEmptyPages:self];
+  if (indexSet.count == 0) {
+      return;
+  }
   
-  // Go through the removed pages and remove its backgroundView if needed
-  [indexSet enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
-    NSNumber *removedPage = @(idx);
-    UIView *bgViewIfAvailable = self.backgroundViews[removedPage];
-    
-    if (bgViewIfAvailable != nil)
-    {
+  // Get the removedViews
+  NSInteger startIndex = self.backgroundViews.count - indexSet.count;
+  NSRange range = (NSRange){ startIndex, indexSet.count };
+  NSArray *removedBackgroundViews = [self.backgroundViews subarrayWithRange:range];
+  
+  for (UIView *view in removedBackgroundViews) {
       // If there is a backgroundView on that particular page,
-      // put it into the cache ivar after removing it from superview.
-      [self.cachedBackgroundViews addObject:bgViewIfAvailable];
-      [bgViewIfAvailable removeFromSuperview];
-      [self.backgroundViews removeObjectForKey:removedPage];
-    }
-    
-  }];
+      // put it into the cache ivar before removing it from superview.
+      [self.cachedBackgroundViews addObject:view];
+      [view removeFromSuperview];
+  }
   
+  // Remove the removedBackgroundViews from the backgroundViews
+  [self.backgroundViews removeObjectsInArray:removedBackgroundViews];
 }
 
 - (void) startEditing {
@@ -838,7 +842,7 @@ static const CGFloat kLongPressDuration = 0.3;
     [self.scrollView setShowsVerticalScrollIndicator:NO];
     [self addSubview:self.scrollView];
   
-    self.backgroundViews = [[[NSMutableDictionary alloc] init] autorelease];
+    self.backgroundViews = [[[NSMutableArray alloc] init] autorelease];
     self.cachedBackgroundViews = [[[NSMutableSet alloc] init] autorelease];
   
     self.shouldReceiveTapWhileEditing = YES;
@@ -876,6 +880,7 @@ static const CGFloat kLongPressDuration = 0.3;
 - (id)initWithFrame:(CGRect) frame {
     if (self = [super initWithFrame:frame]) {
         [self setAutoresizingMask:UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth];
+        [self setShouldRemoveWhenDraggedOutside:NO];
         [self _commonInit];
     }
     return self;

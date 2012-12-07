@@ -89,7 +89,7 @@
 /**
  * Holds the reference to all backgroundViews used by the LauncherView.
  */
-@property (nonatomic, retain) NSMutableDictionary *backgroundViews;
+@property (nonatomic, retain) NSMutableArray *backgroundViews;
 
 /**
  * This enables a customisation on the pageControl class used.
