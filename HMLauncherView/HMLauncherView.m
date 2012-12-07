@@ -391,39 +391,43 @@ static const CGFloat kLongPressDuration = 0.3;
         targetLauncherView = self;
         self.targetPath = nil;
     }
-
+  
     if (targetLauncherView != nil || self.shouldRemoveWhenDraggedOutside) {
         NSAssert((self.shouldRemoveWhenDraggedOutside || targetLauncherView.dragIcon == self.dragIcon), @"launcherView.dragIcon != self.dragIcon");
         [targetLauncherView stopScrollTimer];
       
         NSInteger pageIndex = [targetLauncherView.targetPath pageIndex];
         NSInteger iconIndex = [targetLauncherView.targetPath iconIndex];
-        targetLauncherView.targetPath = nil;
       
         if (targetLauncherView == self) {
-            [self.dataSource launcherView:self moveIcon:self.dragIcon
-                                   toPage:pageIndex
-                                  toIndex:iconIndex];
+            if (targetLauncherView.targetPath != nil) {
+                // Only change or rearrange the position if the location actually changed.
+                [self.dataSource launcherView:self moveIcon:self.dragIcon
+                                       toPage:pageIndex
+                                      toIndex:iconIndex];
+            }
         } else {
             NSLog(@"removing icon: %@ from launcherView: %@", self.dragIcon, self);
             [self.dataSource launcherView:self removeIcon:self.dragIcon];
             if ([self.delegate respondsToSelector:@selector(launcherView:didDeleteIcon:)]) {
-              [self.delegate launcherView:self didDeleteIcon:self.dragIcon];
+                [self.delegate launcherView:self didDeleteIcon:self.dragIcon];
             }
           
             // the icon is dragged outside, if `shouldRemoveWhenDraggedOutside` is set to NO
             // should add it to the targetLauncherView and it should not be nil.
             if (self.shouldRemoveWhenDraggedOutside == NO) {
-              NSAssert((targetLauncherView), @"We dont have another launcherView to move the icon into.\nDrag Icon: %@", self.dragIcon);
-              NSLog(@"adding icon: %@ to launcherView: %@", self.dragIcon, targetLauncherView);
-              if ([self.delegate respondsToSelector:@selector(launcherView:willAddIcon:)]) {
-                [targetLauncherView.delegate launcherView:targetLauncherView willAddIcon:self.dragIcon];
-              }
-              [targetLauncherView.dataSource launcherView:targetLauncherView addIcon:self.dragIcon
-                                                pageIndex:pageIndex
-                                                iconIndex:iconIndex];
+                NSAssert((targetLauncherView), @"We dont have another launcherView to move the icon into.\nDrag Icon: %@", self.dragIcon);
+                NSLog(@"adding icon: %@ to launcherView: %@", self.dragIcon, targetLauncherView);
+                if ([self.delegate respondsToSelector:@selector(launcherView:willAddIcon:)]) {
+                  [targetLauncherView.delegate launcherView:targetLauncherView willAddIcon:self.dragIcon];
+                }
+                [targetLauncherView.dataSource launcherView:targetLauncherView addIcon:self.dragIcon
+                                                  pageIndex:pageIndex
+                                                  iconIndex:iconIndex];
             }
         }
+      
+        targetLauncherView.targetPath = nil;
     }
     
     [targetLauncherView makeIconNonDraggable:targetLauncherView.dragIcon 
