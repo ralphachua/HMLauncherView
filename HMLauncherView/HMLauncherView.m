@@ -269,11 +269,16 @@ static const CGFloat kLongPressDuration = 0.3;
 
 # pragma mark - Background View related
 - (UIView *)reusableBackgroundView {
+  //Quick return if we have nothing.
+  if (self.cachedBackgroundViews.count == 0) {
+    return nil;
+  }
+  
   // Get one of the reusable background view from our cache and make sure to
   // remove it from the cache.
-  UIView *reusableBGView = [[self cachedBackgroundViews] anyObject];
+  UIView *reusableBGView = [[[self cachedBackgroundViews] anyObject] retain];
   [[self cachedBackgroundViews] removeObject:reusableBGView];
-  return reusableBGView;
+  return [reusableBGView autorelease];
 }
 
 - (void)addBackgroundViewIfNescessaryToPage:(NSUInteger)page {
