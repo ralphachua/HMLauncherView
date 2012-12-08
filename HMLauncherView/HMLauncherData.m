@@ -108,14 +108,17 @@
     return freshPage;
 }
 
-- (void) removeEmptyPages {
-    NSMutableArray *pagesToDelete = [NSMutableArray arrayWithCapacity:2];
-    for (NSMutableArray *page in self.launcherIconPages) {
+- (NSIndexSet*) removeEmptyPages {
+    NSMutableIndexSet *deletedPageIndexes = [[NSMutableIndexSet alloc] init];
+    for (NSUInteger i=0; i<self.launcherIconPages.count; i++) {
+        NSArray *page = self.launcherIconPages[i];
         if ([page count] == 0) {
-            [pagesToDelete addObject:page];
+            [deletedPageIndexes addIndex:i];
         }
     }
-    [self.launcherIconPages removeObjectsInArray:pagesToDelete];
+  
+    [self.launcherIconPages removeObjectsAtIndexes:deletedPageIndexes];
+    return deletedPageIndexes;
 }
 
 

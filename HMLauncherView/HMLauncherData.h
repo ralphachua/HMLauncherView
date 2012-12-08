@@ -40,7 +40,7 @@
 
 - (NSMutableArray*) addPage;
 
-- (void) removeEmptyPages;
+- (NSIndexSet*) removeEmptyPages;
 
 - (NSArray*) findIconsByIdentifier:(NSString*) identifier;
 

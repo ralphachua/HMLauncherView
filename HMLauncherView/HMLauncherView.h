@@ -35,6 +35,20 @@ typedef void(^HMLauncherViewPageControlLayoutBlock)(HMLauncherView *, UIPageCont
 - (void) layoutIconsAnimated;
 - (void) layoutIcons;
 
+// Get the reusable background view from the Launcher View
+- (UIView *)reusableBackgroundView;
+
+/**
+ * If `YES` means that when an iCon is dragged outside of the launcherView
+ * bounds and not put in to another HMLauncherView.
+ * The iCon will be indicated as will-be-removed.
+ */
+@property (nonatomic, assign) BOOL shouldRemoveWhenDraggedOutside;
+
+/**
+ * If `YES` the delegate will still gets a
+ * `launcherView:didTapLauncherIcon:` method called.
+ */
 @property (nonatomic, assign) BOOL shouldReceiveTapWhileEditing;
 @property (nonatomic, assign) BOOL shouldLayoutDragButton;
 @property (nonatomic, readonly) BOOL editing;
