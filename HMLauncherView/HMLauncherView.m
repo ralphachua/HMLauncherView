@@ -45,6 +45,7 @@ static const CGFloat kLongPressDuration = 0.3;
 @synthesize shouldRemoveWhenDraggedOutside;
 @synthesize shouldReceiveTapWhileEditing;
 @synthesize shouldLayoutDragButton;
+@synthesize targetIconIsOutside;
 @synthesize targetPath;
 @synthesize persistKey;
 
@@ -340,7 +341,7 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 - (void) longPressBegan:(HMLauncherIcon*) icon {
-    NSLog(@"longPressBegan: %@", persistKey);
+    NSLog(@"longPressBegan: %@", self);
     if (!self.editing) {
         [self startEditing];
         if ([self.delegate respondsToSelector:@selector(launcherViewDidStartEditing:)]) {
@@ -353,24 +354,53 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 - (void) performMove:(HMLauncherIcon *)icon toPoint:(CGPoint)newCenter launcherView:(HMLauncherView *)launcherView {
-    CGPoint newCenterOnKeyView = [icon.superview convertPoint:newCenter 
-                                                     fromView:self];
-    CGPoint previousIconPositionInTarget = [launcherView.scrollView convertPoint:icon.center 
+  
+    BOOL isCurrentlyOutside = (CGRectContainsPoint(self.frame, newCenter) == NO);
+    NSIndexPath *previousIndexPath = nil;
+    NSIndexPath *indexPath = nil;
+  
+    // Get the newCenter location on the key view.
+    CGPoint newCenterOnKeyView = [icon.superview convertPoint:newCenter fromView:self];
+  
+    // Calculate the previous position
+    CGPoint previousIconPositionInTarget = [launcherView.scrollView convertPoint:icon.center
                                                                         fromView:icon.superview];
-    NSIndexPath *previousIndexPath = [launcherView iconIndexForPoint:previousIconPositionInTarget];
+    previousIndexPath = [launcherView iconIndexForPoint:previousIconPositionInTarget];
     
-    
-    [icon setCenter:newCenterOnKeyView];    
-    CGPoint currentIconPositionInTarget = [launcherView.scrollView convertPoint:icon.center 
+  
+    // And the new position
+    CGPoint currentIconPositionInTarget = [launcherView.scrollView convertPoint:newCenterOnKeyView
                                                                        fromView:icon.superview];
-    
-    NSIndexPath *indexPath = [launcherView iconIndexForPoint:currentIconPositionInTarget];   
-    
-    if (![previousIndexPath isEqual:indexPath]) {
+    indexPath = [launcherView iconIndexForPoint:currentIconPositionInTarget];
+  
+    // Calibrate the previous and the current indexPath if
+    // The icon was previously on the outside and it is inside now
+    // The icon was inside and it is outside now
+    // It stays outside and the `shouldRemove` flag is YES.
+    if (self.targetIconIsOutside && isCurrentlyOutside == NO) {
+        // going inside, make previousIndexPath nil
+        self.targetIconIsOutside = NO;
+        previousIndexPath = nil;
+    } else if (self.targetIconIsOutside == NO && isCurrentlyOutside && self.shouldRemoveWhenDraggedOutside) {
+        // going outside, make indexPath nil
+        self.targetIconIsOutside = YES;
+        indexPath = nil;
+    } else if (isCurrentlyOutside && self.shouldRemoveWhenDraggedOutside){
+        // stays outside, make both nil.
+        indexPath = nil;
+        previousIndexPath = nil;
+    }
+  
+    // Move the icon itself.
+    icon.center = newCenterOnKeyView;
+  
+    // Call the delegate if there is a chnge in the indexPath and both of them are not nil.
+    if (![previousIndexPath isEqual:indexPath] && (previousIndexPath != nil || indexPath != nil)) {
         if ([self.delegate respondsToSelector:@selector(launcherView:willMoveIcon:fromIndex:toIndex:)]) {
             [self.delegate launcherView:self willMoveIcon:icon fromIndex:previousIndexPath toIndex:indexPath];
         }
     }
+  
     [launcherView setTargetPath:indexPath];
     [launcherView setDragIcon:icon];
 }
@@ -386,7 +416,7 @@ static const CGFloat kLongPressDuration = 0.3;
 
 - (void) longPressEnded:(HMLauncherIcon*) icon {
     HMLauncherView *targetLauncherView = [self.delegate targetLauncherViewForIcon:icon];
-    NSLog(@"launcherView responsible: %@", targetLauncherView);
+    //NSLog(@"launcherView responsible: %@", targetLauncherView);
     if (targetLauncherView == nil && self.shouldRemoveWhenDraggedOutside == NO) {
         targetLauncherView = self;
         self.targetPath = nil;
@@ -399,8 +429,8 @@ static const CGFloat kLongPressDuration = 0.3;
         NSInteger pageIndex = [targetLauncherView.targetPath pageIndex];
         NSInteger iconIndex = [targetLauncherView.targetPath iconIndex];
       
-        if (targetLauncherView == self) {
-            if (targetLauncherView.targetPath != nil) {
+        if (targetLauncherView.targetPath != nil) {
+            if (targetLauncherView == self) {
                 // Only change or rearrange the position if the location actually changed.
                 [self.dataSource launcherView:self moveIcon:self.dragIcon
                                        toPage:pageIndex
@@ -424,6 +454,10 @@ static const CGFloat kLongPressDuration = 0.3;
                 [targetLauncherView.dataSource launcherView:targetLauncherView addIcon:self.dragIcon
                                                   pageIndex:pageIndex
                                                   iconIndex:iconIndex];
+            } else if (targetLauncherView == self) {
+                // icon gets removed from self and is not added anywhere,
+                // make the targetLauncherView nil
+                targetLauncherView = nil;
             }
         }
       
@@ -632,9 +666,10 @@ static const CGFloat kLongPressDuration = 0.3;
 
 - (void) makeIconDraggable:(HMLauncherIcon*) icon {
     NSParameterAssert(self.dragIcon == nil);
-    
+  
     self.dragIcon = icon;
     self.shouldLayoutDragButton = NO;
+    self.targetIconIsOutside = NO;
     
     // add icon to the top most view, so that we can drag it anywhere.
     [[self keyView] addSubview:self.dragIcon];    
@@ -817,7 +852,11 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 - (NSString*) description {
-    return [NSString stringWithFormat:@"%@", self.persistKey];
+    return [NSString stringWithFormat:
+            @"<%@: %p> - Persist Key: %@",
+            NSStringFromClass(self.class),
+            self,
+            ([self persistKey]) ? [self persistKey] : @"Unnamed"];
 }
 
 #pragma mark - UIAlertViewDelegate
