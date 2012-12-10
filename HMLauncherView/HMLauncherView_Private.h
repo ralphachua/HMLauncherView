@@ -104,4 +104,9 @@
  */
 @property (nonatomic, assign) BOOL targetIconIsOutside;
 
+/**
+ * The view used as the draggedIcon base.
+ */
+@property (nonatomic, strong) UIView *keyView;
+
 @end

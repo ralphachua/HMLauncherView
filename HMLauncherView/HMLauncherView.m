@@ -48,6 +48,7 @@ static const CGFloat kLongPressDuration = 0.3;
 @synthesize targetIconIsOutside;
 @synthesize targetPath;
 @synthesize persistKey;
+@synthesize keyView = _keyView;
 
 @synthesize pageControlClassName = _pageControlClassName;
 
@@ -124,12 +125,22 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 - (UIView *) keyView {
-	UIWindow *w = [self window];
-	if (w.subviews.count > 0) {
-		return [w.subviews lastObject];
-	} else {
-		return w;
-	}
+    if (_keyView == nil) {
+        UIWindow *w = [self window];
+      
+        // Add it as a subview.
+        UIView *vw = [[UIView alloc] initWithFrame:w.frame];
+        vw.backgroundColor = [UIColor clearColor];
+        vw.userInteractionEnabled = NO;
+        [w addSubview:vw];
+      
+        // Assign it.
+        self.keyView = vw;
+    }
+  
+    // And dont forget to bring us to the most-top layer.
+    [_keyView.superview bringSubviewToFront:_keyView];
+    return _keyView;
 }
 
 - (CGFloat) calculateIconSpacer:(NSUInteger) numberOfColumns buttonSize:(CGSize) buttonSize {
@@ -435,7 +446,7 @@ static const CGFloat kLongPressDuration = 0.3;
                                        toPage:pageIndex
                                       toIndex:iconIndex];
             }
-        } else {
+        } else if (self.targetIconIsOutside || self.shouldRemoveWhenDraggedOutside == NO) {
             NSLog(@"removing icon: %@ from launcherView: %@", self.dragIcon, self);
             [self.dataSource launcherView:self removeIcon:self.dragIcon];
             if ([self.delegate respondsToSelector:@selector(launcherView:didDeleteIcon:)]) {
