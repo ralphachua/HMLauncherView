@@ -38,8 +38,8 @@
 - (void) launcherView:(HMLauncherView*) launcherView didDeleteIcon:(HMLauncherIcon*) icon;
 
 /**
- * This delegate method gets called if the launcherView's `shouldRemoveWhenDraggedOutside`
- * is set to `YES` and the icon is dragged outside (will be removed).
+ * This delegate method gets called everytime there is an indication that an icon's index path
+ * will change. (Including the one when an icon gets outside or goes back inside the HMLauncherView)
  */
 - (void) launcherView:(HMLauncherView*) launcherView willMoveIcon:(HMLauncherIcon*) icon 
             fromIndex:(NSIndexPath*) fromIndex 
