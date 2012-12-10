@@ -98,4 +98,15 @@
  */
 @property (nonatomic, retain) NSString *pageControlClassName;
 
+/**
+ * A boolean to indicate that the current targetIcon (draggedIcon)
+ * is outside the boundaries of the HMLauncher
+ */
+@property (nonatomic, assign) BOOL targetIconIsOutside;
+
+/**
+ * The view used as the draggedIcon base.
+ */
+@property (nonatomic, strong) UIView *keyView;
+
 @end
