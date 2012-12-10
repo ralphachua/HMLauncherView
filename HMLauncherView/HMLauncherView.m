@@ -395,7 +395,7 @@ static const CGFloat kLongPressDuration = 0.3;
     icon.center = newCenterOnKeyView;
   
     // Call the delegate if there is a chnge in the indexPath and both of them are not nil.
-    if (![previousIndexPath isEqual:indexPath] && (previousIndexPath != nil || indexPath != nil)) {
+    if (![previousIndexPath isEqual:indexPath] && (previousIndexPath || indexPath )) {
         if ([self.delegate respondsToSelector:@selector(launcherView:willMoveIcon:fromIndex:toIndex:)]) {
             [self.delegate launcherView:self willMoveIcon:icon fromIndex:previousIndexPath toIndex:indexPath];
         }
@@ -416,20 +416,19 @@ static const CGFloat kLongPressDuration = 0.3;
 
 - (void) longPressEnded:(HMLauncherIcon*) icon {
     HMLauncherView *targetLauncherView = [self.delegate targetLauncherViewForIcon:icon];
-    //NSLog(@"launcherView responsible: %@", targetLauncherView);
     if (targetLauncherView == nil && self.shouldRemoveWhenDraggedOutside == NO) {
         targetLauncherView = self;
         self.targetPath = nil;
     }
   
-    if (targetLauncherView != nil || self.shouldRemoveWhenDraggedOutside) {
+    if (targetLauncherView || self.shouldRemoveWhenDraggedOutside) {
         NSAssert((self.shouldRemoveWhenDraggedOutside || targetLauncherView.dragIcon == self.dragIcon), @"launcherView.dragIcon != self.dragIcon");
         [targetLauncherView stopScrollTimer];
       
         NSInteger pageIndex = [targetLauncherView.targetPath pageIndex];
         NSInteger iconIndex = [targetLauncherView.targetPath iconIndex];
       
-        if (targetLauncherView.targetPath != nil) {
+        if (targetLauncherView.targetPath) {
             if (targetLauncherView == self) {
                 // Only change or rearrange the position if the location actually changed.
                 [self.dataSource launcherView:self moveIcon:self.dragIcon
