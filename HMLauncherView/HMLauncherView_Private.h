@@ -33,7 +33,7 @@
 - (void) removeAllGestureRecognizers:(HMLauncherIcon*) icon;
 - (UILongPressGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon
      addLongPressGestureRecognizerWithDuration:(CGFloat) duration
-               requireGestureRecognizersToFail:(NSArray*) recognizersToFail;
+                requireGestureRecognizerToFail:(UIGestureRecognizer*) recognizerToFail;
 - (UITapGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon
  addTapRecognizerWithNumberOfTapsRequred:(NSUInteger) tapsRequired;
 
