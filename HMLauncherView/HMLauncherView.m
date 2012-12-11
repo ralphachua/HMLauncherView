@@ -110,9 +110,9 @@ static const CGFloat kLongPressDuration = 0.3;
     }
   
     if (self.editing == NO && icon.canBeDragged) {
-        UIGestureRecognizer *shorterLongPressGesture = [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:0.1 requireGestureRecognizersToFail:nil];
+        UIGestureRecognizer *shorterLongPressGesture = [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:0.1 requireGestureRecognizerToFail:nil];
         shorterLongPressGesture.delegate = self;
-        [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:self.longPressDuration requireGestureRecognizersToFail:@[tapGestureRecognizer, shorterLongPressGesture]];
+        [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:self.longPressDuration requireGestureRecognizerToFail:shorterLongPressGesture];
     }
   
     [self.scrollView addSubview:icon];
@@ -274,16 +274,15 @@ static const CGFloat kLongPressDuration = 0.3;
 
 - (UILongPressGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon 
      addLongPressGestureRecognizerWithDuration:(CGFloat) duration 
-               requireGestureRecognizersToFail:(NSArray*) recognizersToFail {
+                requireGestureRecognizerToFail:(UIGestureRecognizer*) recognizerToFail {
   
     // LongPress gesture
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self 
                                                                                             action:@selector(didLongPressIcon:withEvent:)];
   
     [longPress setMinimumPressDuration:duration];
-    for (UIGestureRecognizer *recognizer in recognizersToFail) {
-        NSAssert([recognizer isKindOfClass:[UIGestureRecognizer class]], @"Should have passed only the UIGestureRecognizer.");
-        [longPress requireGestureRecognizerToFail:recognizer];
+    if (recognizerToFail) {
+        [longPress requireGestureRecognizerToFail:recognizerToFail];
     }
   
     [icon addGestureRecognizer:longPress];
@@ -292,7 +291,8 @@ static const CGFloat kLongPressDuration = 0.3;
 
 - (UITapGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon addTapRecognizerWithNumberOfTapsRequred:(NSUInteger) tapsRequired {
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTapIcon:)];
-    [tap setNumberOfTapsRequired:tapsRequired];  
+    [tap setNumberOfTapsRequired:tapsRequired];
+    [tap setDelegate:self];
     [icon addGestureRecognizer:tap];
     return [tap autorelease];
 }
@@ -336,7 +336,7 @@ static const CGFloat kLongPressDuration = 0.3;
     if (self.editing && [launcherIcon hitCloseButton:locationInView]) {
         NSString *message = [NSString stringWithFormat:NSLocalizedString(@"HMLauncherView_ConfirmDelete", nil), launcherIcon.launcherItem.titleText];
         
-        
+      
         UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"HMLauncherView_Alert", nil) 
                                                             message:message
                                                            delegate:self 
@@ -521,8 +521,14 @@ static const CGFloat kLongPressDuration = 0.3;
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
     if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && self.editing == NO) {
         return NO;
+    } else if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]] && self.editing == YES && self.shouldReceiveTapWhileEditing == NO) {
+        return NO;
     }
     return YES;
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    return NO;
 }
 
 #pragma mark Paging Related
