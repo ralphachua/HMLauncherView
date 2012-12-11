@@ -23,7 +23,6 @@ static const CGFloat kScrollingFraction = 0.25f;
 static const NSTimeInterval kScrollTimerInterval = 0.7;
 static const CGFloat kLongPressDuration = 0.3;
 
-
 @implementation NSIndexPath(LauncherPath)
 - (NSUInteger) pageIndex {
     return [self indexAtPosition:0];
@@ -54,6 +53,12 @@ static const CGFloat kLongPressDuration = 0.3;
 
 // Related to backgroundViews
 @synthesize backgroundViews, cachedBackgroundViews;
+
+// Some UI related parameters
+@synthesize shakeRadian;
+@synthesize shakeTime;
+@synthesize scrollTimerInterval;
+@synthesize longPressDuration;
 
 - (void) reloadData {
     self.dragIcon = nil;
@@ -98,7 +103,7 @@ static const CGFloat kLongPressDuration = 0.3;
         tapGestureRecognizer = [self launcherIcon:icon addTapRecognizerWithNumberOfTapsRequred:1];
     } 
     if (self.editing == NO && icon.canBeDragged) {
-        [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:kLongPressDuration requireGestureRecognizerToFail:tapGestureRecognizer];
+        [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:self.longPressDuration requireGestureRecognizerToFail:tapGestureRecognizer];
     }
     [self.scrollView addSubview:icon];
 }
@@ -614,6 +619,7 @@ static const CGFloat kLongPressDuration = 0.3;
         NSLog(@"don't start scroll");
         return;
     }
+  
     NSNumber *springOffsetNumber = [NSNumber numberWithInteger:offset];
     if (self.scrollTimer != nil) {
         // check if previous timer heads the right way
@@ -624,7 +630,10 @@ static const CGFloat kLongPressDuration = 0.3;
             [self startScrollTimerWithOffset:offset];
         }
     } else {
-        self.scrollTimer = [NSTimer scheduledTimerWithTimeInterval:kScrollTimerInterval target:self selector:@selector(executeScroll:) userInfo:nil repeats:NO];
+        self.scrollTimer = [NSTimer scheduledTimerWithTimeInterval:self.scrollTimerInterval
+                                                            target:self
+                                                          selector:@selector(executeScroll:)
+                                                          userInfo:nil repeats:NO];
     }
 }
 
@@ -792,14 +801,14 @@ static const CGFloat kLongPressDuration = 0.3;
 
 # pragma mark - shaking
 - (void) startShaking {
-    CGFloat rotation = (kShakeRadians * M_PI) / 180.0;
+    CGFloat rotation = (self.shakeRadian * M_PI) / 180.0;
     CGAffineTransform wobbleLeft = CGAffineTransformMakeRotation(rotation);
     CGAffineTransform wobbleRight = CGAffineTransformMakeRotation(-rotation);
     
     __block NSInteger i = 0;
     __block NSInteger nWobblyIcons = 0;
     
-    [UIView animateWithDuration:kShakeTime 
+    [UIView animateWithDuration:self.shakeTime
                           delay:0 
                         options:UIViewAnimationOptionAutoreverse | UIViewAnimationOptionRepeat | UIViewAnimationOptionAllowUserInteraction
                      animations:^{
@@ -826,7 +835,7 @@ static const CGFloat kLongPressDuration = 0.3;
 - (void) stopShaking {
     [self enumeratePagesUsingBlock:^(NSUInteger page) {
         [self enumerateIconsOfPage:page usingBlock:^(HMLauncherIcon *icon, NSUInteger idx) {
-            [UIView animateWithDuration:kShakeTime 
+            [UIView animateWithDuration:self.shakeTime
                                   delay:0.0 
                                 options:UIViewAnimationOptionAllowUserInteraction
                              animations:^{
@@ -887,7 +896,7 @@ static const CGFloat kLongPressDuration = 0.3;
 
 #pragma mark - lifecycle
 
-- (void)_commonInit {
+- (void)_commonUIInit {
     self.scrollView = [[[UIScrollView alloc] initWithFrame:self.bounds] autorelease];
     [self.scrollView setDelegate:self];
     [self.scrollView setPagingEnabled:YES];
@@ -898,8 +907,6 @@ static const CGFloat kLongPressDuration = 0.3;
     self.backgroundViews = [[[NSMutableArray alloc] init] autorelease];
     self.cachedBackgroundViews = [[[NSMutableSet alloc] init] autorelease];
   
-    self.shouldReceiveTapWhileEditing = YES;
-  
     Class pageControlClass = [UIPageControl class];
     if (self.pageControlClassName != nil) {
       pageControlClass = NSClassFromString(self.pageControlClassName);
@@ -908,7 +915,8 @@ static const CGFloat kLongPressDuration = 0.3;
   
     self.pageControl = [[[pageControlClass alloc]
                          initWithFrame:CGRectMake(0, 10, 10, 10)] autorelease];
-    NSAssert(([self.pageControl isKindOfClass:[UIPageControl class]]), @"pageControl should have a type of UIPageControl or its inherittance.\nInstead it is: %@", [self.pageControl class]);
+    NSAssert(([self.pageControl isKindOfClass:[UIPageControl class]]),
+             @"pageControl should have a type of UIPageControl or its inherittance.\nInstead it is: %@", [self.pageControl class]);
   
     [self.pageControl setHidesForSinglePage:YES];
     [self addSubview:self.pageControl];
@@ -925,16 +933,35 @@ static const CGFloat kLongPressDuration = 0.3;
     }
 }
 
+- (void)_commonInit {
+    [self setAutoresizingMask:UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth];
+    [self setShouldRemoveWhenDraggedOutside:NO];
+  
+    // Punch in default value
+    self.shakeRadian = kShakeRadians;
+    self.shakeTime = kShakeTime;
+    self.scrollTimerInterval = kScrollTimerInterval;
+    self.longPressDuration = kLongPressDuration;
+}
+
 - (void)awakeFromNib {
     [super awakeFromNib];
-    [self _commonInit];
+    [self _commonUIInit];
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    if (self)
+    {
+      [self _commonInit];
+    }
+    return self;
 }
 
 - (id)initWithFrame:(CGRect) frame {
     if (self = [super initWithFrame:frame]) {
-        [self setAutoresizingMask:UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth];
-        [self setShouldRemoveWhenDraggedOutside:NO];
         [self _commonInit];
+        [self _commonUIInit];
     }
     return self;
 }

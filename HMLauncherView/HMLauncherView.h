@@ -63,4 +63,35 @@ typedef void(^HMLauncherViewPageControlLayoutBlock)(HMLauncherView *, UIPageCont
  */
 @property (nonatomic, copy) HMLauncherViewPageControlLayoutBlock pageControlLayoutBlock;
 
+/**
+ * the radian (either left or right) on the icon
+ * wobbling.
+ *
+ * @default 3.0f
+ */
+@property (nonatomic, assign) CGFloat shakeRadian;
+
+/**
+ * The shake time duration when icon wobble.
+ *
+ * @default 0.15
+ */
+@property (nonatomic, assign) NSTimeInterval shakeTime;
+
+/**
+ * Scroll timer interval when the icon is dragged
+ * in the boundary of the page.
+ *
+ * @default 0.7
+ */
+@property (nonatomic, assign) NSTimeInterval scrollTimerInterval;
+
+/**
+ * The long press duration for the gesture
+ * recogniser to picks it up.
+ *
+ * @default 0.3f
+ */
+@property (nonatomic, assign) CGFloat longPressDuration;
+
 @end
