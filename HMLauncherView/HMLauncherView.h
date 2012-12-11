@@ -20,7 +20,7 @@
 
 typedef void(^HMLauncherViewPageControlLayoutBlock)(HMLauncherView *, UIPageControl *);
 
-@interface HMLauncherView : UIView <UIScrollViewDelegate, UIAlertViewDelegate>
+@interface HMLauncherView : UIView <UIScrollViewDelegate, UIAlertViewDelegate, UIGestureRecognizerDelegate>
 
 - (void) reloadData;
 - (void) startEditing;
@@ -93,5 +93,29 @@ typedef void(^HMLauncherViewPageControlLayoutBlock)(HMLauncherView *, UIPageCont
  * @default 0.3f
  */
 @property (nonatomic, assign) CGFloat longPressDuration;
+
+/**
+ * Icon magnification when dragged around.
+ *
+ * @default 1.5f
+ */
+@property (nonatomic, assign) CGFloat draggedIconMagnification;
+
+/**
+ * Icon opacity when dragged around.
+ *
+ * @default 0.9f
+ */
+@property (nonatomic, assign) CGFloat draggedIconOpacity;
+
+/**
+ * When dragged arround, this offset point determine how far off
+ * the icon should be from the finger's point. 
+ *
+ * @discussion  Negative value indicates upper or more left,
+ *              while positive indicates lower or more right
+ * @default (CGPoint) {0.0f, 0.0f}
+ */
+@property (nonatomic, assign) CGPoint draggedIconOffset;
 
 @end

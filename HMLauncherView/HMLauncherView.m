@@ -60,6 +60,11 @@ static const CGFloat kLongPressDuration = 0.3;
 @synthesize scrollTimerInterval;
 @synthesize longPressDuration;
 
+// Some dragged-icon behavior
+@synthesize draggedIconMagnification;
+@synthesize draggedIconOpacity;
+@synthesize draggedIconOffset;
+
 - (void) reloadData {
     self.dragIcon = nil;
     self.targetPath = nil;
@@ -97,14 +102,19 @@ static const CGFloat kLongPressDuration = 0.3;
 
 - (void) addIcon:(HMLauncherIcon*) icon {
     NSAssert([self.dataSource launcherView:self contains:icon] == YES, @"Model is inconsistent with view");
-    
+  
+    // Then add the required gesture recogniser.
     UITapGestureRecognizer *tapGestureRecognizer = nil;
     if (self.editing == NO && icon.canBeTapped) {
         tapGestureRecognizer = [self launcherIcon:icon addTapRecognizerWithNumberOfTapsRequred:1];
-    } 
-    if (self.editing == NO && icon.canBeDragged) {
-        [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:self.longPressDuration requireGestureRecognizerToFail:tapGestureRecognizer];
     }
+  
+    if (self.editing == NO && icon.canBeDragged) {
+        UIGestureRecognizer *shorterLongPressGesture = [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:0.1 requireGestureRecognizersToFail:nil];
+        shorterLongPressGesture.delegate = self;
+        [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:self.longPressDuration requireGestureRecognizersToFail:@[tapGestureRecognizer, shorterLongPressGesture]];
+    }
+  
     [self.scrollView addSubview:icon];
 }
 
@@ -264,23 +274,25 @@ static const CGFloat kLongPressDuration = 0.3;
 
 - (UILongPressGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon 
      addLongPressGestureRecognizerWithDuration:(CGFloat) duration 
-                requireGestureRecognizerToFail:(UIGestureRecognizer*) recognizerToFail {
+               requireGestureRecognizersToFail:(NSArray*) recognizersToFail {
+  
     // LongPress gesture
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self 
                                                                                             action:@selector(didLongPressIcon:withEvent:)];
+  
     [longPress setMinimumPressDuration:duration];
-    if (recognizerToFail != nil) {
-        [recognizerToFail requireGestureRecognizerToFail:longPress];
+    for (UIGestureRecognizer *recognizer in recognizersToFail) {
+        NSAssert([recognizer isKindOfClass:[UIGestureRecognizer class]], @"Should have passed only the UIGestureRecognizer.");
+        [longPress requireGestureRecognizerToFail:recognizer];
     }
   
     [icon addGestureRecognizer:longPress];
     return [longPress autorelease];
 }
 
-- (UITapGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon 
- addTapRecognizerWithNumberOfTapsRequred:(NSUInteger) tapsRequired {
+- (UITapGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon addTapRecognizerWithNumberOfTapsRequred:(NSUInteger) tapsRequired {
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTapIcon:)];
-    [tap setNumberOfTapsRequired:tapsRequired];
+    [tap setNumberOfTapsRequired:tapsRequired];  
     [icon addGestureRecognizer:tap];
     return [tap autorelease];
 }
@@ -319,6 +331,7 @@ static const CGFloat kLongPressDuration = 0.3;
 # pragma mark - Gesture Actions
 - (void) didTapIcon:(UITapGestureRecognizer*) sender {
     HMLauncherIcon *launcherIcon = (HMLauncherIcon*) sender.view;
+  
     CGPoint locationInView = [sender locationOfTouch:0 inView:launcherIcon];
     if (self.editing && [launcherIcon hitCloseButton:locationInView]) {
         NSString *message = [NSString stringWithFormat:NSLocalizedString(@"HMLauncherView_ConfirmDelete", nil), launcherIcon.launcherItem.titleText];
@@ -357,7 +370,6 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 - (void) longPressBegan:(HMLauncherIcon*) icon {
-    NSLog(@"longPressBegan: %@", self);
     if (!self.editing) {
         [self startEditing];
         if ([self.delegate respondsToSelector:@selector(launcherViewDidStartEditing:)]) {
@@ -504,6 +516,17 @@ static const CGFloat kLongPressDuration = 0.3;
     }
 }
 
+#pragma mark UIGestureRecognizerDelegate
+
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
+    if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && self.editing == NO) {
+        return NO;
+    }
+    return YES;
+}
+
+#pragma mark Paging Related
+
 - (NSMutableArray *) addPage {
   // Get the newPage added to the dataSource.
   NSMutableArray *newPage = [self.dataSource addPageToLauncherView:self];
@@ -569,40 +592,40 @@ static const CGFloat kLongPressDuration = 0.3;
     } else {
         NSLog(@" %@: editing of was already stopped", persistKey);
     }
-    
 }
+
 
 - (void) updateTapGestureRecogniserIfNecessary {
-  BOOL shouldBeEnabled = YES;
-  if (self.editing && self.shouldReceiveTapWhileEditing)
-  {
-    shouldBeEnabled = NO;
-  }
-  
-  [self enumeratePagesUsingBlock:^(NSUInteger page) {
-    [self enumerateIconsOfPage:page usingBlock:^(HMLauncherIcon *icon, NSUInteger idx) {
-      [self tapGestureRecogniserFor:icon enabled:shouldBeEnabled];
+    BOOL shouldBeEnabled = YES;
+    if (self.editing && self.shouldReceiveTapWhileEditing) {
+        shouldBeEnabled = NO;
+    }
+
+    [self enumeratePagesUsingBlock:^(NSUInteger page) {
+        [self enumerateIconsOfPage:page usingBlock:^(HMLauncherIcon *icon, NSUInteger idx) {
+            [self tapGestureRecogniserFor:icon enabled:shouldBeEnabled];
+        }];
     }];
-  }];
 }
 
+
 - (void) tapGestureRecogniserFor:(HMLauncherIcon *)icon enabled:(BOOL)enabled {
-  // Get all of the tapGestureRecognisers in the list of recognisers.
-  NSIndexSet *tapGestureRecognisers = [icon.gestureRecognizers indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
-    return ([obj isKindOfClass:[UITapGestureRecognizer class]]);
-  }];
-  
-  if (tapGestureRecognisers.count > 1)
-  {
-    // We have more than 1 tapGestureRecogniser, print out the warning why is this happening?
-    NSLog(@"[Warning]Found %@ in icon: %@", tapGestureRecognisers, icon);
-  }
-  
-  // Turn it to enable/disable depending on the parameter supplied.
-  [tapGestureRecognisers enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
-    UITapGestureRecognizer *gestureRecogniser = icon.gestureRecognizers[idx];
-    gestureRecogniser.enabled = enabled;
-  }];
+    // Get all of the tapGestureRecognisers in the list of recognisers.
+    NSIndexSet *tapGestureRecognisers = [icon.gestureRecognizers indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+        return ([obj isKindOfClass:[UITapGestureRecognizer class]]);
+    }];
+    
+    if (tapGestureRecognisers.count > 1)
+    {
+        // We have more than 1 tapGestureRecogniser, print out the warning why is this happening?
+        NSLog(@"[Warning]Found %@ in icon: %@", tapGestureRecognisers, icon);
+    }
+    
+    // Turn it to enable/disable depending on the parameter supplied.
+    [tapGestureRecognisers enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+        UITapGestureRecognizer *gestureRecogniser = icon.gestureRecognizers[idx];
+        gestureRecogniser.enabled = enabled;
+    }];
 }
 
 
@@ -695,10 +718,13 @@ static const CGFloat kLongPressDuration = 0.3;
     CGPoint iconOutsideScrollView = [self.dragIcon.superview convertPoint:self.dragIcon.center 
                                                                  fromView:self.scrollView];
     [self.dragIcon setCenter:iconOutsideScrollView];
+  
+    CGAffineTransform transform = CGAffineTransformScale(icon.transform, self.draggedIconMagnification, self.draggedIconMagnification);
+    transform = CGAffineTransformTranslate(transform, self.draggedIconOffset.x, self.draggedIconOffset.y);
     
     [UIView animateWithDuration:0.25 animations:^{
-        icon.transform = CGAffineTransformMakeScale(1.5, 1.5);
-        icon.alpha = 0.9;
+        icon.transform = transform;
+        icon.alpha = self.draggedIconOpacity;
     }];
     if ([self.delegate respondsToSelector:@selector(launcherView:didStartDragging:)]) {
         [self.delegate launcherView:self didStartDragging:icon];
@@ -942,6 +968,10 @@ static const CGFloat kLongPressDuration = 0.3;
     self.shakeTime = kShakeTime;
     self.scrollTimerInterval = kScrollTimerInterval;
     self.longPressDuration = kLongPressDuration;
+  
+    self.draggedIconMagnification = 1.5f;
+    self.draggedIconOpacity = 0.9f;
+    self.draggedIconOffset = (CGPoint) {0.0f, 0.0f};
 }
 
 - (void)awakeFromNib {
