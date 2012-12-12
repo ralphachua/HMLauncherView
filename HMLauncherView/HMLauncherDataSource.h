@@ -41,9 +41,6 @@
 // The total number of pages to be shown in the launcher view.
 - (NSUInteger) numberOfPagesInLauncherView:(HMLauncherView *) launcherView;
 
-// Counts all contained icons in the given launcher view
-- (NSUInteger) numberOfIconsInLauncherView:(HMLauncherView *)launcherView;
-
 // The total number of buttons in a given page.
 - (NSUInteger) launcherView:(HMLauncherView *)launcherView 
         numberOfIconsInPage:(NSUInteger)page;
