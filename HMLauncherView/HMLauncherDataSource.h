@@ -60,9 +60,6 @@
 
 
 // Writing operations
-- (void) launcherView:(HMLauncherView*) launcherView 
-              addIcon:(HMLauncherIcon*) icon;
-
 - (void) launcherView:(HMLauncherView*) launcherView
               addIcon:(HMLauncherIcon*) icon
             pageIndex:(NSUInteger) pageIndex
