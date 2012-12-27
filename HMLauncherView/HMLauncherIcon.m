@@ -24,6 +24,7 @@
 @synthesize identifier;
 @synthesize originIndexPath;
 @synthesize launcherItem;
+@synthesize tapRecognizerShouldCancelTouch;
 
 - (BOOL) hitCloseButton:(CGPoint)point {
     NSAssert(NO, @"this method must be overridden");
@@ -48,6 +49,7 @@
         self.launcherItem = inLauncherItem;
         self.identifier = inLauncherItem.identifier;
         self.hideDeleteImage = YES;
+        self.tapRecognizerShouldCancelTouch = YES;
         [self setClipsToBounds:NO];
         [self setContentMode:UIViewContentModeRedraw];
         [self setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
