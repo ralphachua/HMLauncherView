@@ -29,6 +29,9 @@
 @property (nonatomic, retain) NSIndexPath *originIndexPath;
 @property (nonatomic, retain) HMLauncherItem *launcherItem;
 
+/** If YES (default), the tap recognizer will cancel the touch event on the UIControl itself. **/
+@property (nonatomic, assign) BOOL tapRecognizerShouldCancelTouch;
+
 // Should return YES, if the close button contains the given point. 
 - (BOOL) hitCloseButton:(CGPoint) point;
 

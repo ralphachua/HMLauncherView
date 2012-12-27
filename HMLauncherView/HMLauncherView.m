@@ -293,6 +293,7 @@ static const CGFloat kLongPressDuration = 0.3;
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTapIcon:)];
     [tap setNumberOfTapsRequired:tapsRequired];
     [tap setDelegate:self];
+    [tap setCancelsTouchesInView:icon.tapRecognizerShouldCancelTouch];
     [icon addGestureRecognizer:tap];
     return [tap autorelease];
 }
