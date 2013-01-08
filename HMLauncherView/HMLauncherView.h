@@ -35,6 +35,14 @@ typedef void(^HMLauncherViewPageControlLayoutBlock)(HMLauncherView *, UIPageCont
 - (void) layoutIconsAnimated;
 - (void) layoutIcons;
 
+/**
+ * Returns the index of the currently active page.
+ *
+ * @warning This implementation relies on the page control, and thus
+ * this value should not be considered reliable in the middle of scrolling.
+ */
+- (NSInteger) pageIndex;
+
 // Get the reusable background view from the Launcher View
 - (UIView *)reusableBackgroundView;
 

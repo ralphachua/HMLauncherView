@@ -534,6 +534,11 @@ static const CGFloat kLongPressDuration = 0.3;
 
 #pragma mark Paging Related
 
+- (NSInteger) pageIndex {
+  // The math for calculating this value is in `-updatePagerWithContentOffset:`.
+  return self.pageControl.currentPage;
+}
+
 - (NSMutableArray *) addPage {
   // Get the newPage added to the dataSource.
   NSMutableArray *newPage = [self.dataSource addPageToLauncherView:self];
