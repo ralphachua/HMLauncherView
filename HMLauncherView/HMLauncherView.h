@@ -36,6 +36,12 @@ typedef void(^HMLauncherViewPageControlLayoutBlock)(HMLauncherView *, UIPageCont
 - (void) layoutIcons;
 
 /**
+ * Scroll to a particular page index.
+ * Note that this method makes zero attempt to validate `pageIndex`.
+ */
+-(void)scrollToPage:(NSInteger)pageIndex animated:(BOOL)animated;
+
+/**
  * Returns the index of the currently active page.
  *
  * @warning This implementation relies on the page control, and thus

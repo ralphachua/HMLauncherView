@@ -700,6 +700,15 @@ static const CGFloat kLongPressDuration = 0.3;
     }
 }
 
+-(void)scrollToPage:(NSInteger)pageIndex animated:(BOOL)animated
+{
+    CGRect newPageRect = CGRectZero;
+    newPageRect.origin.x = pageIndex * self.scrollView.bounds.size.width;
+    newPageRect.origin.y = 0.f;
+    newPageRect.size = self.scrollView.bounds.size;
+    [self.scrollView scrollRectToVisible:newPageRect animated:animated];
+}
+
 - (NSInteger) calculateSpringOffset:(HMLauncherIcon*) icon {
     CGSize iconSize = [self.dataSource buttonDimensionsInLauncherView:self];
     CGFloat springWidth = iconSize.width * kScrollingFraction;
