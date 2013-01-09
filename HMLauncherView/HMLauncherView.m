@@ -706,7 +706,7 @@ static const CGFloat kLongPressDuration = 0.3;
     newPageRect.origin.x = pageIndex * self.scrollView.bounds.size.width;
     newPageRect.origin.y = 0.f;
     newPageRect.size = self.scrollView.bounds.size;
-    [self.scrollView scrollRectToVisible:newPageRect animated:YES];
+    [self.scrollView scrollRectToVisible:newPageRect animated:animated];
 }
 
 - (NSInteger) calculateSpringOffset:(HMLauncherIcon*) icon {
