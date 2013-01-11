@@ -577,7 +577,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
       
         [self removeEmptyPages];
         [self addPage];
-        [self updateIconsTouchEventIfNecessary];
+        [self updateTapGestureRecogniserIfNecessary];
         [self updateDeleteButtons];
         [self updateScrollViewContentSize];        
         [self updatePagerWithContentOffset:self.scrollView.contentOffset];
@@ -596,7 +596,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
         [self stopShaking];
         [self updateDeleteButtons];
         [self removeEmptyPages];
-        [self updateIconsTouchEventIfNecessary];
+        [self updateTapGestureRecogniserIfNecessary];
         [self updateScrollViewContentSize];    
         [self updatePagerWithContentOffset:self.scrollView.contentOffset];
         [self setTargetPath:nil];
@@ -608,7 +608,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
 }
 
 
-- (void) updateIconsTouchEventIfNecessary {
+- (void) updateTapGestureRecogniserIfNecessary {
     BOOL shouldBeEnabled = YES;
     if (self.editing && self.shouldReceiveTapWhileEditing) {
         shouldBeEnabled = NO;
@@ -616,7 +616,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
 
     [self enumeratePagesUsingBlock:^(NSUInteger page) {
         [self enumerateIconsOfPage:page usingBlock:^(HMLauncherIcon *icon, NSUInteger idx) {
-            icon.enabled = (self.editing == NO);
+            icon.editing = self.editing;
             [self tapGestureRecogniserFor:icon enabled:shouldBeEnabled];
         }];
     }];

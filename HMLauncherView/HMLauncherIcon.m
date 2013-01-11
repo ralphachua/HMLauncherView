@@ -21,6 +21,7 @@
 @synthesize canBeDragged;
 @synthesize canBeTapped;
 @synthesize hideDeleteImage;
+@synthesize editing;
 @synthesize identifier;
 @synthesize originIndexPath;
 @synthesize launcherItem;
