@@ -616,6 +616,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
 
     [self enumeratePagesUsingBlock:^(NSUInteger page) {
         [self enumerateIconsOfPage:page usingBlock:^(HMLauncherIcon *icon, NSUInteger idx) {
+            icon.editing = self.editing;
             [self tapGestureRecogniserFor:icon enabled:shouldBeEnabled];
         }];
     }];
@@ -887,7 +888,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
                                   delay:0.0 
                                 options:UIViewAnimationOptionAllowUserInteraction
                              animations:^{
-                                 icon.transform = CGAffineTransformIdentity; 
+                                 icon.transform = CGAffineTransformIdentity;
                              } completion: ^(BOOL finished) {
                                  
                              }];
