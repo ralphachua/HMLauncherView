@@ -374,9 +374,6 @@ static const CGFloat kLayoutIconDuration = 0.35;
 - (void) longPressBegan:(HMLauncherIcon*) icon {
     if (!self.editing) {
         [self startEditing];
-        if ([self.delegate respondsToSelector:@selector(launcherViewDidStartEditing:)]) {
-            [self.delegate launcherViewDidStartEditing:self];
-        }
     }
     NSIndexPath *originIndexPath = [self iconIndexForPoint:icon.center];
     [icon setOriginIndexPath:originIndexPath];
@@ -585,6 +582,9 @@ static const CGFloat kLayoutIconDuration = 0.35;
         [self updateScrollViewContentSize];        
         [self updatePagerWithContentOffset:self.scrollView.contentOffset];
         [self startShaking];
+        if ([self.delegate respondsToSelector:@selector(launcherViewDidStartEditing:)]) {
+          [self.delegate launcherViewDidStartEditing:self];
+        }
     } else {
         NSLog(@" %@: editing of was already started", persistKey);
     }
