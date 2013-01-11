@@ -63,7 +63,7 @@
  * Update the tapGestureRecogniser in each icon to enable/disable depending
  * on the current mode.
  */
-- (void) updateTapGestureRecogniserIfNecessary;
+- (void) updateIconsTouchEventIfNecessary;
 
 /**
  * Enable/Disable every tapGestureRecogniser in a specified icon.

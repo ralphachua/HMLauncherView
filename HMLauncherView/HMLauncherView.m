@@ -577,7 +577,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
       
         [self removeEmptyPages];
         [self addPage];
-        [self updateTapGestureRecogniserIfNecessary];
+        [self updateIconsTouchEventIfNecessary];
         [self updateDeleteButtons];
         [self updateScrollViewContentSize];        
         [self updatePagerWithContentOffset:self.scrollView.contentOffset];
@@ -596,7 +596,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
         [self stopShaking];
         [self updateDeleteButtons];
         [self removeEmptyPages];
-        [self updateTapGestureRecogniserIfNecessary];
+        [self updateIconsTouchEventIfNecessary];
         [self updateScrollViewContentSize];    
         [self updatePagerWithContentOffset:self.scrollView.contentOffset];
         [self setTargetPath:nil];
@@ -608,7 +608,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
 }
 
 
-- (void) updateTapGestureRecogniserIfNecessary {
+- (void) updateIconsTouchEventIfNecessary {
     BOOL shouldBeEnabled = YES;
     if (self.editing && self.shouldReceiveTapWhileEditing) {
         shouldBeEnabled = NO;
@@ -616,6 +616,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
 
     [self enumeratePagesUsingBlock:^(NSUInteger page) {
         [self enumerateIconsOfPage:page usingBlock:^(HMLauncherIcon *icon, NSUInteger idx) {
+            icon.enabled = (self.editing == NO);
             [self tapGestureRecogniserFor:icon enabled:shouldBeEnabled];
         }];
     }];
@@ -887,7 +888,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
                                   delay:0.0 
                                 options:UIViewAnimationOptionAllowUserInteraction
                              animations:^{
-                                 icon.transform = CGAffineTransformIdentity; 
+                                 icon.transform = CGAffineTransformIdentity;
                              } completion: ^(BOOL finished) {
                                  
                              }];
