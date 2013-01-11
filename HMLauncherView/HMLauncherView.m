@@ -22,6 +22,7 @@ static const NSTimeInterval kShakeTime = 0.15;
 static const CGFloat kScrollingFraction = 0.25f;
 static const NSTimeInterval kScrollTimerInterval = 0.7;
 static const CGFloat kLongPressDuration = 0.3;
+static const CGFloat kLayoutIconDuration = 0.35;
 
 @implementation NSIndexPath(LauncherPath)
 - (NSUInteger) pageIndex {
@@ -183,7 +184,7 @@ static const CGFloat kLongPressDuration = 0.3;
 }
 
 - (void) layoutIconsAnimated {
-    [UIView animateWithDuration:0.75
+    [UIView animateWithDuration:kLayoutIconDuration
                           delay:0.0
                         options:UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction
                      animations:^{
