@@ -25,6 +25,10 @@
 @property (nonatomic, assign) BOOL canBeDragged;
 @property (nonatomic, assign) BOOL canBeTapped;
 @property (nonatomic, assign) BOOL hideDeleteImage;
+
+/** If `YES` indicates that HMLauncherView is in edit mode. **/
+@property (nonatomic, assign, getter=isEditing) BOOL editing;
+
 @property (nonatomic, retain) NSString *identifier;
 @property (nonatomic, retain) NSIndexPath *originIndexPath;
 @property (nonatomic, retain) HMLauncherItem *launcherItem;
