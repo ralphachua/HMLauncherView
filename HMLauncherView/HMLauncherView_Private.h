@@ -17,7 +17,7 @@
                    usingBlock:(void (^) (HMLauncherIcon* icon, NSUInteger idx)) block;
 
 
-- (CGFloat) calculateIconSpacer:(NSUInteger) numberOfColumns buttonSize:(CGSize) buttonSize;
+- (CGSize) calculateIconSpacerForTotalColumns:(NSUInteger) totalColumns totalRows:(NSUInteger) totalRows buttonSize:(CGSize) buttonSize;
 - (NSInteger) calculateSpringOffset:(HMLauncherIcon*) icon;
 - (void) executeScroll:(NSTimer*) timer;
 

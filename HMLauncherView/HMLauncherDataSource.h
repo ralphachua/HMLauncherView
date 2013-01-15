@@ -19,15 +19,14 @@
 
 @protocol HMLauncherDataSource <NSObject>
 @optional
-/**
- * Ability to supply an optional view as a background for a certain page.
- */
+/** Ability to supply an optional view as a background for a certain page. **/
 - (UIView *)launcherView:(HMLauncherView *)launcherView backgroundForPage:(NSUInteger)page;
 
-/**
- * Returns whether the scrollView in launcherView should bounce.
- */
+/** Returns whether the scrollView in launcherView should bounce. **/
 - (BOOL)launcherViewShouldBounce:(HMLauncherView *)launcherView;
+
+/** Returns a CGSize of how much offset for each button. **/
+- (CGSize) buttonSpacerInLauncherView:(HMLauncherView *) launcherView;
 
 @required
 
