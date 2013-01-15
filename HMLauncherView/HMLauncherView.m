@@ -159,11 +159,24 @@ static const CGFloat kLayoutIconDuration = 0.35;
     return _keyView;
 }
 
-- (CGFloat) calculateIconSpacer:(NSUInteger) numberOfColumns buttonSize:(CGSize) buttonSize {
+- (CGSize) calculateIconSpacerForTotalColumns:(NSUInteger) totalColumns totalRows:(NSUInteger) totalRows buttonSize:(CGSize) buttonSize {
+    // If the dataSource wants a custom implementation.
+    if ([self.dataSource respondsToSelector:@selector(buttonSpacerInLauncherView:)])
+    {
+      return [self.dataSource buttonSpacerInLauncherView:self];
+    }
+  
+    // Otherwise, try to be smart and divide it even-ly
     CGFloat contentWidth = CGRectGetWidth(self.bounds);
-    CGFloat allIconsWidth = numberOfColumns * buttonSize.width;
-    CGFloat iconSpacer = (contentWidth - allIconsWidth) / (numberOfColumns - 1);
-    return iconSpacer;
+    CGFloat contentHeight = CGRectGetHeight(self.bounds);
+  
+    CGFloat allIconsWidth = totalColumns * buttonSize.width;
+    CGFloat allIconsHeight = totalRows * buttonSize.height;
+  
+    CGFloat iconXSpacer = (contentWidth - allIconsWidth) / (totalColumns - 1);
+    CGFloat iconYSpacer = (contentHeight - allIconsHeight) / (totalRows - 1);
+  
+    return (CGSize){ iconXSpacer, iconYSpacer };
 }
 
 - (void) layoutSubviews {
@@ -202,7 +215,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
     NSUInteger numberOfColumns = [self.dataSource numberOfColumnsInLauncherView:self]; 
     NSUInteger numberOfRows    = [self.dataSource numberOfRowsInLauncherView:self];
     CGSize  iconSize           = [self.dataSource buttonDimensionsInLauncherView:self];
-    CGFloat iconSpacer         = [self calculateIconSpacer:numberOfColumns buttonSize:iconSize];
+    CGSize iconSpacer         = [self calculateIconSpacerForTotalColumns:numberOfColumns totalRows:numberOfRows buttonSize:iconSize];
     
     CGFloat pageWidth = CGRectGetWidth(self.scrollView.bounds);
     
@@ -230,12 +243,13 @@ static const CGFloat kLayoutIconDuration = 0.35;
                     [iconsWithSpacer insertObject:[NSNull null] atIndex:iconIndex];
                 } else {
                     [iconsWithSpacer addObject:[NSNull null]];
-                }
+                } 
             }
-        }    
+        }
+      
         for (NSObject *iconObj in iconsWithSpacer) {
             if (currentColumnIndex == numberOfColumns) {
-                iconY += iconSize.height;
+                iconY += iconSize.height + iconSpacer.height;
                 currentColumnIndex = 0;
                 currentRowIndex++;
             }
@@ -249,7 +263,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
             
             if ([iconObj isKindOfClass:[HMLauncherIcon class]]) {
                 HMLauncherIcon *icon = (HMLauncherIcon*) iconObj;
-                CGFloat iconX = iconXStart + (currentColumnIndex * (iconSize.width + iconSpacer));
+                CGFloat iconX = iconXStart + (currentColumnIndex * (iconSize.width + iconSpacer.width));
                 [icon setBounds:CGRectMake(0, 0, iconSize.width, iconSize.height)];
                 CGPoint iconCenterInScrollView = CGPointMake(iconX + iconSize.width / 2, iconY + iconSize.height / 2);
                 if (icon != dragIcon) {
