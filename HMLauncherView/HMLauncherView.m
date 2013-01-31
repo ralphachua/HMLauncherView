@@ -716,8 +716,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
     }
 }
 
--(void)scrollToPage:(NSInteger)pageIndex animated:(BOOL)animated
-{
+-(void) scrollToPage:(NSInteger) pageIndex animated:(BOOL) animated {
     CGRect newPageRect = CGRectZero;
     newPageRect.origin.x = pageIndex * self.scrollView.bounds.size.width;
     newPageRect.origin.y = 0.f;
@@ -844,6 +843,16 @@ static const CGFloat kLayoutIconDuration = 0.35;
             }
         }];
     }];  
+}
+
+- (void) pageControlTapped:(id) sender {
+    // Make sure the sender is a page control
+    UIPageControl *tappedPageControl = (UIPageControl *)sender;
+    NSAssert(([tappedPageControl isKindOfClass:[UIPageControl class]]), @"This method should only be called by UIPageControl's callback.");
+
+    // Animate to move to that page.
+    NSUInteger currentPage = tappedPageControl.currentPage;
+    [self scrollToPage:currentPage animated:YES];
 }
 
 # pragma mark - enumeration
@@ -994,6 +1003,9 @@ static const CGFloat kLayoutIconDuration = 0.35;
         [self.pageControl setFrame:CGRectMake(0, pageControlY, CGRectGetWidth(self.bounds), pageControlHeight)];
       };
     }
+  
+    // When tapped, move the page
+    [self.pageControl addTarget:self action:@selector(pageControlTapped:) forControlEvents:UIControlEventValueChanged];
 }
 
 - (void)_commonInit {
