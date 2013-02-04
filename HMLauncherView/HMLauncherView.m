@@ -282,7 +282,10 @@ static const CGFloat kLayoutIconDuration = 0.35;
 - (void) removeAllGestureRecognizers:(HMLauncherIcon*) icon {
     NSArray *gestureRecognizers = [[icon gestureRecognizers] copy];
     for (UIGestureRecognizer *recognizer in gestureRecognizers) {
-        [icon removeGestureRecognizer:recognizer];
+        // Only remove the gesture recognizer that is owned by this instance.
+        if ([recognizer delegate] == self) {
+          [icon removeGestureRecognizer:recognizer];
+        }
     }
     [gestureRecognizers release];
 }
