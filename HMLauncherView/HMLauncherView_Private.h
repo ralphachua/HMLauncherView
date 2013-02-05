@@ -52,7 +52,6 @@
 - (void) checkIfScrollingIsNeeded:(HMLauncherIcon*) launcherIcon;
 - (void) startScrollTimerWithOffset:(NSInteger) offset;
 - (void) stopScrollTimer;
-- (void) executeScroll:(NSTimer *)timer;
 
 - (void) updatePagerWithContentOffset:(CGPoint) contentOffset;
 - (void) updateScrollViewContentSize;
