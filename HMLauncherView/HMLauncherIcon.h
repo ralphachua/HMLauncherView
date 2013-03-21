@@ -33,6 +33,9 @@
 @property (nonatomic, retain) NSIndexPath *originIndexPath;
 @property (nonatomic, retain) HMLauncherItem *launcherItem;
 
+/** The gesture recogniser used to drag this icon around. */
+@property (nonatomic, strong) UIGestureRecognizer *draggingGestureRecogniser;
+
 /** If YES (default), the tap recognizer will cancel the touch event on the UIControl itself. **/
 @property (nonatomic, assign) BOOL tapRecognizerShouldCancelTouch;
 

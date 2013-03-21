@@ -25,7 +25,7 @@
 @synthesize identifier;
 @synthesize originIndexPath;
 @synthesize launcherItem;
-@synthesize tapRecognizerShouldCancelTouch;
+@synthesize tapRecognizerShouldCancelTouch, draggingGestureRecogniser;
 
 - (BOOL) hitCloseButton:(CGPoint)point {
     NSAssert(NO, @"this method must be overridden");
