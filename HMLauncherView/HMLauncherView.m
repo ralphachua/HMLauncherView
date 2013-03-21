@@ -111,8 +111,11 @@ static const CGFloat kLayoutIconDuration = 0.35;
     }
   
     if (self.editing == NO && icon.canBeDragged) {
+        // The shorterLongPressGesture is used to trigger the startEditing behaviour
         UIGestureRecognizer *shorterLongPressGesture = [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:0.1 requireGestureRecognizerToFail:nil];
-        shorterLongPressGesture.delegate = self;
+      
+        // Then this second one, which requires the shorterLongPressGesture to fail before it changed state from possible-->began
+        // is used to drag the icon around.
         [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:self.longPressDuration requireGestureRecognizerToFail:shorterLongPressGesture];
     }
   
@@ -298,6 +301,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self 
                                                                                             action:@selector(didLongPressIcon:withEvent:)];
   
+    [longPress setDelegate:self];
     [longPress setMinimumPressDuration:duration];
     if (recognizerToFail) {
         [longPress requireGestureRecognizerToFail:recognizerToFail];
@@ -535,7 +539,12 @@ static const CGFloat kLayoutIconDuration = 0.35;
 #pragma mark UIGestureRecognizerDelegate
 
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
-    if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && self.editing == NO) {
+    if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && self.dragIcon != nil && self.editing) {
+        // This first case is when there is a LongPressGestureRecogniser, its on editing mode
+        // AND... there is another icon being dragged around (moved),
+        // that gestureRecogniser should not begin.
+        return NO;
+    } else if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && self.editing == NO) {
         return NO;
     } else if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]] && self.editing == YES && self.shouldReceiveTapWhileEditing == NO) {
         return NO;
