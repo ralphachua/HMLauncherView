@@ -116,7 +116,8 @@ static const CGFloat kLayoutIconDuration = 0.35;
       
         // Then this second one, which requires the shorterLongPressGesture to fail before it changed state from possible-->began
         // is used to drag the icon around.
-        [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:self.longPressDuration requireGestureRecognizerToFail:shorterLongPressGesture];
+        UIGestureRecognizer *draggingGestureRecogniser = [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:self.longPressDuration requireGestureRecognizerToFail:shorterLongPressGesture];
+        icon.draggingGestureRecogniser = draggingGestureRecogniser;
     }
   
     [self.scrollView addSubview:icon];
@@ -539,12 +540,16 @@ static const CGFloat kLayoutIconDuration = 0.35;
 #pragma mark UIGestureRecognizerDelegate
 
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
+    HMLauncherIcon *icon = (HMLauncherIcon *)gestureRecognizer.view;
+    NSAssert([icon isKindOfClass:[HMLauncherIcon class]], @"Gesture recognizer's view has to be typed of HMLauncherIcon.");
+  
     if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && self.dragIcon != nil && self.editing) {
         // This first case is when there is a LongPressGestureRecogniser, its on editing mode
         // AND... there is another icon being dragged around (moved),
         // that gestureRecogniser should not begin.
         return NO;
-    } else if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && self.editing == NO) {
+    } else if (self.editing == NO && [gestureRecognizer isEqual:icon.draggingGestureRecogniser] == NO) {
+        // Make sure this is not the gestureRecognizer used for dragging the icon.
         return NO;
     } else if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]] && self.editing == YES && self.shouldReceiveTapWhileEditing == NO) {
         return NO;
