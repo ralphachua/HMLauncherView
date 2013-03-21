@@ -544,7 +544,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
         // AND... there is another icon being dragged around (moved),
         // that gestureRecogniser should not begin.
         return NO;
-    } else if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && self.dragIcon != nil) {
+    } else if ([gestureRecognizer isKindOfClass:[UILongPressGestureRecognizer class]] && self.editing == NO) {
         return NO;
     } else if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]] && self.editing == YES && self.shouldReceiveTapWhileEditing == NO) {
         return NO;
