@@ -118,7 +118,7 @@
     }
   
     [self.launcherIconPages removeObjectsAtIndexes:deletedPageIndexes];
-    return deletedPageIndexes;
+    return [deletedPageIndexes autorelease];
 }
 
 
