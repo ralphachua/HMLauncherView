@@ -105,9 +105,8 @@ static const CGFloat kLayoutIconDuration = 0.35;
     NSAssert([self.dataSource launcherView:self contains:icon] == YES, @"Model is inconsistent with view");
   
     // Then add the required gesture recogniser.
-    UITapGestureRecognizer *tapGestureRecognizer = nil;
     if (self.editing == NO && icon.canBeTapped) {
-        tapGestureRecognizer = [self launcherIcon:icon addTapRecognizerWithNumberOfTapsRequred:1];
+        [self launcherIcon:icon addTapRecognizerWithNumberOfTapsRequred:1];
     }
   
     if (self.editing == NO && icon.canBeDragged) {
@@ -156,6 +155,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
       
         // Assign it.
         self.keyView = vw;
+        [vw release];
     }
   
     // And dont forget to bring us to the most-top layer.
