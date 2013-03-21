@@ -548,8 +548,9 @@ static const CGFloat kLayoutIconDuration = 0.35;
         // AND... there is another icon being dragged around (moved),
         // that gestureRecogniser should not begin.
         return NO;
-    } else if (self.editing == NO && [gestureRecognizer isEqual:icon.draggingGestureRecogniser] == NO) {
+    } else if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]] && self.editing == NO && [gestureRecognizer isEqual:icon.draggingGestureRecogniser] == NO) {
         // Make sure this is not the gestureRecognizer used for dragging the icon.
+        // AND not the single-tap-recogniser.
         return NO;
     } else if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]] && self.editing == YES && self.shouldReceiveTapWhileEditing == NO) {
         return NO;
