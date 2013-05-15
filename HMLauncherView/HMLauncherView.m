@@ -397,9 +397,18 @@ static const CGFloat kLayoutIconDuration = 0.35;
     if (!self.editing) {
         [self startEditing];
     }
+  
     NSIndexPath *originIndexPath = [self iconIndexForPoint:icon.center];
     [icon setOriginIndexPath:originIndexPath];
-    [self makeIconDraggable:icon];
+  
+    if (self.dragIcon == nil) {
+        // Its possible to perfectly press 2 icons at the exact moment
+        // And two of the gestureRecogniser gets triggered. If that happens,
+        // Whoever the first one gets executed win and dont let the second one mess up with the logic, just ignore it.
+        [self makeIconDraggable:icon];
+    } else {
+        NSLog(@"Oops, theres already a dragIcon. Only move 1 icon at a time.\t\nTried to begin long press with: %@", icon);
+    }
 }
 
 - (void) performMove:(HMLauncherIcon *)icon toPoint:(CGPoint)newCenter launcherView:(HMLauncherView *)launcherView {
@@ -555,6 +564,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
     } else if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]] && self.editing == YES && self.shouldReceiveTapWhileEditing == NO) {
         return NO;
     }
+  
     return YES;
 }
 
