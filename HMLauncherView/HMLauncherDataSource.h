@@ -26,7 +26,7 @@
 - (BOOL)launcherViewShouldBounce:(HMLauncherView *)launcherView;
 
 /** Returns a CGSize of how much offset for each button. **/
-- (CGSize) buttonSpacerInLauncherView:(HMLauncherView *) launcherView;
+- (CGSize)buttonSpacerInLauncherView:(HMLauncherView *)launcherView;
 
 @required
 
