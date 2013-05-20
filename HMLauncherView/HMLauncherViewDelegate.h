@@ -35,6 +35,12 @@
 
 - (void) launcherView:(HMLauncherView*) launcherView willAddIcon:(HMLauncherIcon*) icon;
 
+/**
+ * Returns `YES` if the icon should be removed.
+ * This method would be called everytime the icon would get removed.
+ */
+- (BOOL) launcherView:(HMLauncherView*) launcherView shouldRemoveIcon:(HMLauncherIcon*) icon;
+
 - (void) launcherView:(HMLauncherView*) launcherView didDeleteIcon:(HMLauncherIcon*) icon;
 
 /**
