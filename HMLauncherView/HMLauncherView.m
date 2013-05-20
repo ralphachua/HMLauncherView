@@ -494,15 +494,24 @@ static const CGFloat kLayoutIconDuration = 0.35;
                                       toIndex:iconIndex];
             }
         } else if (self.targetIconIsOutside || self.shouldRemoveWhenDraggedOutside == NO) {
-            NSLog(@"removing icon: %@ from launcherView: %@", self.dragIcon, self);
-            [self.dataSource launcherView:self removeIcon:self.dragIcon];
-            if ([self.delegate respondsToSelector:@selector(launcherView:didDeleteIcon:)]) {
+          
+            BOOL iconShouldBeRemoved = YES;
+            if ([self.delegate respondsToSelector:@selector(launcherView:shouldRemoveIcon:)])
+            {
+              iconShouldBeRemoved = [self.delegate launcherView:self shouldRemoveIcon:self.dragIcon];
+            }
+          
+            if (iconShouldBeRemoved) {
+              NSLog(@"removing icon: %@ from launcherView: %@", self.dragIcon, self);
+              [self.dataSource launcherView:self removeIcon:self.dragIcon];
+              if ([self.delegate respondsToSelector:@selector(launcherView:didDeleteIcon:)]) {
                 [self.delegate launcherView:self didDeleteIcon:self.dragIcon];
+              }
             }
           
             // the icon is dragged outside, if `shouldRemoveWhenDraggedOutside` is set to NO
             // should add it to the targetLauncherView and it should not be nil.
-            if (self.shouldRemoveWhenDraggedOutside == NO) {
+            if (self.shouldRemoveWhenDraggedOutside == NO || iconShouldBeRemoved == NO) {
                 NSAssert((targetLauncherView), @"We dont have another launcherView to move the icon into.\nDrag Icon: %@", self.dragIcon);
                 NSLog(@"adding icon: %@ to launcherView: %@", self.dragIcon, targetLauncherView);
                 if ([self.delegate respondsToSelector:@selector(launcherView:willAddIcon:)]) {
