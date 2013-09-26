@@ -21,7 +21,6 @@
 - (NSInteger) calculateSpringOffset:(HMLauncherIcon*) icon;
 - (void) executeScroll:(NSTimer*) timer;
 
-- (void) didLongPressIcon:(UILongPressGestureRecognizer*) sender withEvent:(UIEvent*) event;
 - (void) didTapIcon:(UITapGestureRecognizer*) sender;
 - (void) longPressBegan:(HMLauncherIcon*) icon;
 - (void) longPressMoved:(HMLauncherIcon*) icon
@@ -31,9 +30,6 @@
                 toPoint:(CGPoint)newCenter
            launcherView:(HMLauncherView *)launcherView;
 - (void) removeAllGestureRecognizers:(HMLauncherIcon*) icon;
-- (UILongPressGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon
-     addLongPressGestureRecognizerWithDuration:(CGFloat) duration
-                requireGestureRecognizerToFail:(UIGestureRecognizer*) recognizerToFail;
 - (UITapGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon
  addTapRecognizerWithNumberOfTapsRequred:(NSUInteger) tapsRequired;
 
@@ -62,7 +58,7 @@
  * Update the tapGestureRecogniser in each icon to enable/disable depending
  * on the current mode.
  */
-- (void) updateTapGestureRecogniserIfNecessary;
+- (void) updateGestureRecognisersIfNecessary;
 
 /**
  * Enable/Disable every tapGestureRecogniser in a specified icon.
