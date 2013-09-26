@@ -23,6 +23,7 @@ static const CGFloat kScrollingFraction = 0.25f;
 static const NSTimeInterval kScrollTimerInterval = 0.7;
 static const CGFloat kLongPressDuration = 0.3;
 static const CGFloat kLayoutIconDuration = 0.35;
+static const CGFloat kDragGestureRecognizerDuration = 0.1;
 
 @implementation NSIndexPath(LauncherPath)
 - (NSUInteger) pageIndex {
@@ -111,7 +112,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
   
     if (icon.canBeDragged) {
       // Gesture recognizer used to drag the icon around.
-      UIGestureRecognizer *draggingGestureRecogniser = [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:0.1 requireGestureRecognizerToFail:nil];
+      UIGestureRecognizer *draggingGestureRecogniser = [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:kDragGestureRecognizerDuration requireGestureRecognizerToFail:nil];
       icon.draggingGestureRecogniser = draggingGestureRecogniser;
       
       // Disable for now, re-enable when editing, disable again when editing ends
