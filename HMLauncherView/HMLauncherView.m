@@ -108,7 +108,13 @@ static const CGFloat kLayoutIconDuration = 0.35;
     if (self.editing == NO && icon.canBeTapped) {
         [self launcherIcon:icon addTapRecognizerWithNumberOfTapsRequred:1];
     }
-    
+  
+    if (icon.canBeDragged) {
+        // Gesture recognizer used to drag the icon around.
+        UIGestureRecognizer *draggingGestureRecogniser = [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:0.1 requireGestureRecognizerToFail:nil];
+        icon.draggingGestureRecogniser = draggingGestureRecogniser;
+    }
+  
     [self.scrollView addSubview:icon];
 }
 
@@ -284,6 +290,24 @@ static const CGFloat kLayoutIconDuration = 0.35;
     [gestureRecognizers release];
 }
 
+- (UILongPressGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon
+     addLongPressGestureRecognizerWithDuration:(CGFloat) duration
+                requireGestureRecognizerToFail:(UIGestureRecognizer*) recognizerToFail {
+  
+  // LongPress gesture
+  UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self
+                                                                                          action:@selector(didLongPressIcon:withEvent:)];
+  
+  [longPress setDelegate:self];
+  [longPress setMinimumPressDuration:duration];
+  if (recognizerToFail) {
+    [longPress requireGestureRecognizerToFail:recognizerToFail];
+  }
+  
+  [icon addGestureRecognizer:longPress];
+  return [longPress autorelease];
+}
+
 - (UITapGestureRecognizer*) launcherIcon:(HMLauncherIcon*) icon addTapRecognizerWithNumberOfTapsRequred:(NSUInteger) tapsRequired {
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTapIcon:)];
     [tap setNumberOfTapsRequired:tapsRequired];
@@ -348,11 +372,32 @@ static const CGFloat kLayoutIconDuration = 0.35;
     }
 }
 
-- (void) longPressBegan:(HMLauncherIcon*) icon {
-    if (!self.editing) {
-        [self startEditing];
+- (void) didLongPressIcon:(UILongPressGestureRecognizer*) sender withEvent:(UIEvent*) event {
+    if (self.editing == NO || [self.scrollView isDragging]) {
+        return;
     }
-  
+    HMLauncherIcon *icon = (HMLauncherIcon*) sender.view;
+    if (sender.state == UIGestureRecognizerStateBegan) {
+        if (self.dragIcon == nil) {
+            [self longPressBegan:icon];
+        }
+    } else if (sender.state == UIGestureRecognizerStateChanged) {
+        CGPoint iconPoint = [sender locationInView:self];
+        if (self.dragIcon == icon) {
+            [self longPressMoved:icon toPoint:iconPoint];
+        }
+    } else if (sender.state == UIGestureRecognizerStateEnded) {
+        if (self.dragIcon == icon) {
+            [self longPressEnded:icon ];
+        }
+    } else if (sender.state == UIGestureRecognizerStateCancelled) {
+        if (self.dragIcon == icon) {
+            [self longPressEnded:icon];
+        }
+    }
+}
+
+- (void) longPressBegan:(HMLauncherIcon*) icon {
     NSIndexPath *originIndexPath = [self iconIndexForPoint:icon.center];
     [icon setOriginIndexPath:originIndexPath];
   
