@@ -110,9 +110,12 @@ static const CGFloat kLayoutIconDuration = 0.35;
     }
   
     if (icon.canBeDragged) {
-        // Gesture recognizer used to drag the icon around.
-        UIGestureRecognizer *draggingGestureRecogniser = [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:0.1 requireGestureRecognizerToFail:nil];
-        icon.draggingGestureRecogniser = draggingGestureRecogniser;
+      // Gesture recognizer used to drag the icon around.
+      UIGestureRecognizer *draggingGestureRecogniser = [self launcherIcon:icon addLongPressGestureRecognizerWithDuration:0.1 requireGestureRecognizerToFail:nil];
+      icon.draggingGestureRecogniser = draggingGestureRecogniser;
+      
+      // Disable for now, re-enable when editing, disable again when editing ends
+      icon.draggingGestureRecogniser.enabled = NO;
     }
   
     [self.scrollView addSubview:icon];
@@ -628,7 +631,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
       
         [self removeEmptyPages];
         [self addPage];
-        [self updateTapGestureRecogniserIfNecessary];
+        [self updateGestureRecognisersIfNecessary];
         [self updateDeleteButtons];
         [self updateScrollViewContentSize];        
         [self updatePagerWithContentOffset:self.scrollView.contentOffset];
@@ -647,7 +650,7 @@ static const CGFloat kLayoutIconDuration = 0.35;
         [self stopShaking];
         [self updateDeleteButtons];
         [self removeEmptyPages];
-        [self updateTapGestureRecogniserIfNecessary];
+        [self updateGestureRecognisersIfNecessary];
         [self updateScrollViewContentSize];    
         [self updatePagerWithContentOffset:self.scrollView.contentOffset];
         [self setTargetPath:nil];
@@ -659,16 +662,21 @@ static const CGFloat kLayoutIconDuration = 0.35;
 }
 
 
-- (void) updateTapGestureRecogniserIfNecessary {
+- (void) updateGestureRecognisersIfNecessary {
     BOOL shouldBeEnabled = YES;
     if (self.editing && self.shouldReceiveTapWhileEditing) {
         shouldBeEnabled = NO;
+    }
+    BOOL dragGestureShouldBeEnabled = NO;
+    if (self.editing) {
+        dragGestureShouldBeEnabled = YES;
     }
 
     [self enumeratePagesUsingBlock:^(NSUInteger page) {
         [self enumerateIconsOfPage:page usingBlock:^(HMLauncherIcon *icon, NSUInteger idx) {
             icon.editing = self.editing;
             [self tapGestureRecogniserFor:icon enabled:shouldBeEnabled];
+            [self dragGestureRecogniserFor:icon enabled:dragGestureShouldBeEnabled];
         }];
     }];
 }
@@ -691,6 +699,26 @@ static const CGFloat kLayoutIconDuration = 0.35;
         UITapGestureRecognizer *gestureRecogniser = icon.gestureRecognizers[idx];
         gestureRecogniser.enabled = enabled;
     }];
+}
+
+
+- (void) dragGestureRecogniserFor:(HMLauncherIcon *)icon enabled:(BOOL)enabled {
+  // Get all of the dragGestureRecognisers in the list of recognisers.
+  NSIndexSet *dragGestureRecognisers = [icon.gestureRecognizers indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+    return ([obj isKindOfClass:[UILongPressGestureRecognizer class]]);
+  }];
+  
+  if (dragGestureRecognisers.count > 1)
+  {
+    // We have more than 1 dragGestureRecogniser, print out the warning why is this happening?
+    NSLog(@"[Warning]Found more than one drag gesture recognizer: %@ in icon: %@", dragGestureRecognisers, icon);
+  }
+  
+  // Turn it to enable/disable depending on the parameter supplied.
+  [dragGestureRecognisers enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+    UILongPressGestureRecognizer *gestureRecogniser = icon.gestureRecognizers[idx];
+    gestureRecogniser.enabled = enabled;
+  }];
 }
 
 
