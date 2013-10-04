@@ -341,7 +341,7 @@ static const CGFloat kDragGestureRecognizerDuration = 0.1;
     // Grab the backgroundView from the datasource.
     UIView *view = [self.dataSource launcherView:self backgroundForPage:page];
     CGRect frame = view.frame;
-    frame.origin.x = frame.origin.x + CGRectGetWidth(self.scrollView.bounds)*page;
+    frame.origin.x = CGRectGetWidth(self.scrollView.bounds)*page;
     view.frame = frame;
     
     // Add the background to the subview.
@@ -610,6 +610,8 @@ static const CGFloat kDragGestureRecognizerDuration = 0.1;
       return;
   }
   
+  // TODO: This might be causing some problem if there is more than 1 emptypages especially in the middle
+  // TODO: Look here when shit happens with BG --RPR 13/10/04
   // Get the removedViews
   NSInteger startIndex = self.backgroundViews.count - indexSet.count;
   NSRange range = (NSRange){ startIndex, indexSet.count };
