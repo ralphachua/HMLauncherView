@@ -341,7 +341,7 @@ static const CGFloat kDragGestureRecognizerDuration = 0.1;
     // Grab the backgroundView from the datasource.
     UIView *view = [self.dataSource launcherView:self backgroundForPage:page];
     CGRect frame = view.frame;
-    frame.origin.x = frame.origin.x + CGRectGetWidth(self.scrollView.bounds)*page;
+    frame.origin.x = CGRectGetWidth(self.scrollView.bounds)*page;
     view.frame = frame;
     
     // Add the background to the subview.
