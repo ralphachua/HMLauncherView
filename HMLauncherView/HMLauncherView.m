@@ -610,8 +610,6 @@ static const CGFloat kDragGestureRecognizerDuration = 0.1;
       return;
   }
   
-  // TODO: This might be causing some problem if there is more than 1 emptypages especially in the middle
-  // TODO: Look here when shit happens with BG --RPR 13/10/04
   // Get the removedViews
   NSInteger startIndex = self.backgroundViews.count - indexSet.count;
   NSRange range = (NSRange){ startIndex, indexSet.count };
