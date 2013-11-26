@@ -147,8 +147,8 @@
 }
 
 - (NSString*) description {
-    return [NSString stringWithFormat:@"%@, maxRows:%d, maxColumns:%d, [launcherIconPages count]:%d", 
-            persistKey, maxRows, maxColumns, [launcherIconPages count]];
+    return [NSString stringWithFormat:@"%@, maxRows:%ld, maxColumns:%ld, [launcherIconPages count]:%lu",
+            persistKey, (long)maxRows, (long)maxColumns, (unsigned long)[launcherIconPages count]];
 }
 
 - (NSUInteger) iconCount {
